@@ -40,3 +40,4 @@ Didukung mesin **SheetJS (OpenXML)** lokal untuk menghasilkan dokumen `.xlsx` mu
 
 ---
 **Pengembang**: [adlizainpribadi65-alt](https://github.com/adlizainpribadi65-alt)
+
