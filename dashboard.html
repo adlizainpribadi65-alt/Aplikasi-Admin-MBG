@@ -142,6 +142,10 @@
 
     <!-- Header Actions (Search, Bell, User Capsule Pill) -->
     <div class="header-actions">
+      <a href="absensi-terminal.html" target="_blank" class="btn btn-sm" style="display:inline-flex;align-items:center;gap:6px;background:var(--gray-900);color:#fff;border-radius:20px;padding:7px 14px;font-size:12px;font-weight:600;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,0.12);" title="Buka Terminal Absensi Mobile">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        Terminal Absensi
+      </a>
       <button class="header-round-btn" title="Cari data staf..." onclick="navigate('staf')">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       </button>
@@ -316,8 +320,9 @@
       <h2 class="spotlight-title">Kelola <span class="spotlight-pill">Excel</span> & Laporan dengan Cepat!</h2>
       <p class="spotlight-desc">Didukung 10 modul otomatis, SheetJS native multi-sheet (.xlsx), kalkulasi kehadiran, dan cetak perpanjangan kontrak kerja instan.</p>
       
-      <div class="spotlight-btn-wrap">
+      <div class="spotlight-btn-wrap" style="display:flex;gap:10px;flex-wrap:wrap;">
         <button class="btn-spotlight-action" onclick="navigate('excel')">Buka Excel Hub →</button>
+        <a href="absensi-terminal.html" target="_blank" class="btn-spotlight-action" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);color:#fff;text-decoration:none;" title="Buka Terminal Absensi Mobile">📱 Terminal Absensi Wajah ↗</a>
       </div>
 
       <!-- Sleek abstract geometric line decoration -->
@@ -393,6 +398,10 @@
         <div class="text-xs text-muted mt-1" id="abs-day-label"></div>
       </div>
       <div class="toolbar">
+        <a href="absensi-terminal.html" target="_blank" class="btn btn-sm btn-primary" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          Buka Terminal Mobile ↗
+        </a>
         <input type="date" id="abs-date" class="ctrl" style="width:160px">
         <button class="btn btn-green btn-sm" onclick="saveAbsensi()">💾 Simpan</button>
         <button class="btn btn-excel btn-sm" onclick="exportAbsensiExcel()">📗 Export Excel (.xlsx)</button>
