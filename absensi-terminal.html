@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Terminal Absensi — Admin MBG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ========================================================
+       TERMINAL ABSENSI — MBG MOBILE KIOSK v1.0
+       Theme: White SaaS / Light Mode — consistent with dashboard
+    ======================================================== */
+    :root {
+      --primary:        #171920;
+      --primary-hover:  #282c37;
+      --accent-blue:    #0284c7;
+      --accent-green:   #059669;
+      --accent-amber:   #d97706;
+      --accent-orange:  #ea580c;
+      --accent-red:     #dc2626;
+      --accent-purple:  #7c3aed;
+      --border-light:   #e2e8f0;
+      --border-focus:   #94a3b8;
+      --surface-card:   #ffffff;
+      --surface-subtle: #f8fafc;
+      --text-main:      #0f172a;
+      --text-muted:     #64748b;
+      --text-subtle:    #94a3b8;
+      --radius-sm:      8px;
+      --radius-md:      12px;
+      --radius-lg:      18px;
+      --radius-xl:      24px;
+      --radius-pill:    9999px;
+      --shadow-card:    0 4px 24px -4px rgba(15, 23, 42, 0.10), 0 1px 4px rgba(15, 23, 42, 0.06);
+      --shadow-lg:      0 20px 60px -12px rgba(15, 23, 42, 0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #edf3fa;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 10% 0%, rgba(219,234,254,0.65) 0%, transparent 55%),
+        radial-gradient(ellipse 70% 55% at 90% 100%, rgba(241,245,249,0.85) 0%, transparent 55%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px 32px;
+      position: relative;
+    }
+
+    /* ---- Decorative floating dots background ---- */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        radial-gradient(circle 2px at 15% 25%, rgba(148,163,184,0.25) 0%, transparent 100%),
+        radial-gradient(circle 1.5px at 85% 70%, rgba(148,163,184,0.2) 0%, transparent 100%),
+        radial-gradient(circle 1px at 50% 50%, rgba(148,163,184,0.15) 0%, transparent 100%);
+    }
+
+    /* ============================================================ */
+    /*  WRAPPER                                                      */
+    /* ============================================================ */
+    .terminal-wrapper {
+      width: 100%;
+      max-width: 480px;
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ============================================================ */
+    /*  HEADER BRAND                                                 */
+    /* ============================================================ */
+    .brand-header {
+      text-align: center;
+      padding: 8px 0 4px;
+    }
+
+    .brand-logo-wrap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .brand-icon {
+      width: 44px; height: 44px;
+      background: var(--primary);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 14px rgba(23,25,32,0.25);
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.3px;
+    }
+    .brand-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* ============================================================ */
+    /*  LIVE CLOCK PILL                                              */
+    /* ============================================================ */
+    .clock-pill {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 14px 20px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .clock-left { display: flex; flex-direction: column; gap: 2px; }
+    .clock-date {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .clock-time {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -1px;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.1;
+    }
+
+    .clock-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+    .live-dot {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent-green);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .live-dot::before {
+      content: '';
+      width: 7px; height: 7px;
+      background: var(--accent-green);
+      border-radius: 50%;
+      animation: pulse-green 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse-green {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+    .clock-hari {
+      font-size: 12px;
+      color: var(--text-subtle);
+      font-weight: 500;
+    }
+
+    /* ============================================================ */
+    /*  MAIN CARD                                                    */
+    /* ============================================================ */
+    .card {
+      background: var(--surface-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-xl);
+      padding: 24px 22px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 4px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title svg { flex-shrink: 0; }
+    .card-desc {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    /* ============================================================ */
+    /*  FORM ELEMENTS                                                */
+    /* ============================================================ */
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+    .form-group:last-child { margin-bottom: 0; }
+
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    select, input[type="text"] {
+      width: 100%;
+      padding: 13px 16px;
+      background: var(--surface-subtle);
+      border: 1.5px solid var(--border-light);
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-family: inherit;
+      color: var(--text-main);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 42px;
+      cursor: pointer;
+    }
+    select:focus, input[type="text"]:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
+      background: #fff;
+    }
+    select:disabled, input:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* ============================================================ */
+    /*  STATUS GRID — 5 Tap Buttons                                  */
+    /* ============================================================ */
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .status-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 14px 4px 12px;
+      background: var(--surface-subtle);
+      border: 2px solid var(--border-light);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .status-btn:active { transform: scale(0.94); }
+
+    .status-btn .s-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.18s;
+    }
+    .status-btn .s-label {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-align: center;
+      transition: color 0.18s;
+      line-height: 1.2;
+    }
+
+    /* Status color themes */
+    .status-btn[data-s="Hadir"] .s-icon      { background: rgba(5, 150, 105, 0.1); }
+    .status-btn[data-s="Terlambat"] .s-icon  { background: rgba(217, 119, 6, 0.1); }
+    .status-btn[data-s="Izin"] .s-icon       { background: rgba(2, 132, 199, 0.1); }
+    .status-btn[data-s="Sakit"] .s-icon      { background: rgba(124, 58, 237, 0.1); }
+    .status-btn[data-s="Alpha"] .s-icon      { background: rgba(220, 38, 38, 0.1); }
+
+    /* Active / selected state */
+    .status-btn.active[data-s="Hadir"]     { border-color: var(--accent-green); background: rgba(5,150,105,0.05); }
+    .status-btn.active[data-s="Terlambat"] { border-color: var(--accent-amber); background: rgba(217,119,6,0.05); }
+    .status-btn.active[data-s="Izin"]      { border-color: var(--accent-blue);  background: rgba(2,132,199,0.05); }
+    .status-btn.active[data-s="Sakit"]     { border-color: var(--accent-purple); background: rgba(124,58,237,0.05); }
+    .status-btn.active[data-s="Alpha"]     { border-color: var(--accent-red);   background: rgba(220,38,38,0.05); }
+
+    .status-btn.active[data-s="Hadir"]     .s-label { color: var(--accent-green); }
+    .status-btn.active[data-s="Terlambat"] .s-label { color: var(--accent-amber); }
+    .status-btn.active[data-s="Izin"]      .s-label { color: var(--accent-blue); }
+    .status-btn.active[data-s="Sakit"]     .s-label { color: var(--accent-purple); }
+    .status-btn.active[data-s="Alpha"]     .s-label { color: var(--accent-red); }
+
+    .status-btn .s-check {
+      position: absolute; top: 5px; right: 5px;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      display: none; align-items: center; justify-content: center;
+    }
+    .status-btn.active .s-check { display: flex; }
+    .status-btn.active[data-s="Hadir"]     .s-check { background: var(--accent-green); }
+    .status-btn.active[data-s="Terlambat"] .s-check { background: var(--accent-amber); }
+    .status-btn.active[data-s="Izin"]      .s-check { background: var(--accent-blue); }
+    .status-btn.active[data-s="Sakit"]     .s-check { background: var(--accent-purple); }
+    .status-btn.active[data-s="Alpha"]     .s-check { background: var(--accent-red); }
+
+    /* ============================================================ */
+    /*  SUBMIT BUTTON                                                */
+    /* ============================================================ */
+    .btn-submit {
+      width: 100%;
+      padding: 16px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(23,25,32,0.2);
+      letter-spacing: -0.2px;
+    }
+    .btn-submit:hover { background: var(--primary-hover); box-shadow: 0 6px 20px rgba(23,25,32,0.28); }
+    .btn-submit:active { transform: scale(0.98); }
+    .btn-submit:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+    /* ============================================================ */
+    /*  ALERT / MESSAGE BANNERS                                      */
+    /* ============================================================ */
+    .alert {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 13px 15px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.5;
+      border: 1.5px solid;
+      animation: slideDown 0.25s ease;
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .alert-warn  { background: rgba(217,119,6,0.07); border-color: rgba(217,119,6,0.3); color: #92400e; }
+    .alert-error { background: rgba(220,38,38,0.07); border-color: rgba(220,38,38,0.3); color: #991b1b; }
+    .alert-info  { background: rgba(2,132,199,0.07); border-color: rgba(2,132,199,0.3); color: #0369a1; }
+
+    /* ============================================================ */
+    /*  SUCCESS STATE                                                */
+    /* ============================================================ */
+    #success-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0;
+    }
+
+    .success-ring {
+      width: 88px; height: 88px;
+      border-radius: 50%;
+      background: rgba(5,150,105,0.1);
+      border: 2.5px solid rgba(5,150,105,0.25);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes popIn {
+      from { transform: scale(0.5); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
+    .success-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+    .success-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .success-info-card {
+      width: 100%;
+      background: var(--surface-subtle);
+      border: 1.5px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      text-align: left;
+      margin-bottom: 20px;
+    }
+    .info-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 0;
+    }
+    .info-row + .info-row {
+      border-top: 1px solid var(--border-light);
+    }
+    .info-label {
+      font-size: 12px;
+      color: var(--text-subtle);
+      font-weight: 500;
+    }
+    .info-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+      text-align: right;
+    }
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .badge-Hadir     { background: rgba(5,150,105,0.12); color: #065f46; }
+    .badge-Terlambat { background: rgba(217,119,6,0.12); color: #78350f; }
+    .badge-Izin      { background: rgba(2,132,199,0.12); color: #0c4a6e; }
+    .badge-Sakit     { background: rgba(124,58,237,0.12); color: #3b0764; }
+    .badge-Alpha     { background: rgba(220,38,38,0.12); color: #7f1d1d; }
+
+    .btn-reset {
+      width: 100%;
+      padding: 14px;
+      background: transparent;
+      color: var(--text-muted);
+      border: 1.5px solid var(--border-light);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .btn-reset:hover {
+      border-color: var(--border-focus);
+      color: var(--text-main);
+      background: var(--surface-subtle);
+    }
+
+    /* ============================================================ */
+    /*  STAFF INFO PREVIEW (after selection)                         */
+    /* ============================================================ */
+    .staff-preview {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: var(--surface-subtle);
+      border: 1.5px solid var(--border-light);
+      border-radius: var(--radius-md);
+      margin-top: 10px;
+    }
+    .staff-preview.show { display: flex; }
+
+    .staff-avatar {
+      width: 42px; height: 42px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .staff-info-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .staff-info-job {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ============================================================ */
+    /*  FOOTER LINK                                                  */
+    /* ============================================================ */
+    .footer-link {
+      text-align: center;
+      padding-top: 4px;
+    }
+    .footer-link a {
+      font-size: 12.5px;
+      color: var(--text-subtle);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: color 0.15s;
+      font-weight: 500;
+    }
+    .footer-link a:hover { color: var(--text-muted); }
+
+    .footer-copy {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-subtle);
+      margin-top: 8px;
+      letter-spacing: 0.3px;
+    }
+
+    /* ============================================================ */
+    /*  TOAST NOTIFICATION                                           */
+    /* ============================================================ */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--primary);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: var(--radius-pill);
+      font-size: 13.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+      opacity: 0;
+      z-index: 999;
+      pointer-events: none;
+      max-width: 90vw;
+      white-space: normal;
+      text-align: center;
+    }
+    #toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* ============================================================ */
+    /*  RESPONSIVE                                                   */
+    /* ============================================================ */
+    @media (max-width: 360px) {
+      .status-btn .s-label { font-size: 9px; }
+      .clock-time { font-size: 26px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="terminal-wrapper">
+
+  <!-- ===== BRAND HEADER ===== -->
+  <div class="brand-header">
+    <div class="brand-logo-wrap">
+      <div class="brand-icon">
+        <!-- Slate-gray geometric SVG monogram identical to dashboard -->
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="3" width="9" height="9" rx="2.2" fill="rgba(255,255,255,0.9)"/>
+          <rect x="14" y="3" width="9" height="9" rx="2.2" fill="rgba(255,255,255,0.55)"/>
+          <rect x="3" y="14" width="9" height="9" rx="2.2" fill="rgba(255,255,255,0.55)"/>
+          <rect x="16" y="16" width="5" height="5" rx="1.4" fill="rgba(255,255,255,0.75)"/>
+          <rect x="14" y="14" width="4" height="4" rx="1.2" fill="rgba(255,255,255,0.3)"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-title">Admin MBG</div>
+        <div class="brand-subtitle">Terminal Absensi</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== LIVE CLOCK ===== -->
+  <div class="clock-pill">
+    <div class="clock-left">
+      <div class="clock-date" id="clock-date">Memuat tanggal...</div>
+      <div class="clock-time" id="clock-time">--:--:--</div>
+    </div>
+    <div class="clock-badge">
+      <div class="live-dot">Live</div>
+      <div class="clock-hari" id="clock-hari">—</div>
+    </div>
+  </div>
+
+  <!-- ===== FORM CARD ===== -->
+  <div class="card" id="form-card">
+    <div class="card-title">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+      </svg>
+      Identifikasi Staf
+    </div>
+    <div class="card-desc">Pilih nama Anda dari daftar staf aktif untuk mencatat kehadiran hari ini.</div>
+
+    <div class="form-group">
+      <label>Pilih Nama Staf</label>
+      <select id="staf-select" onchange="onStafChange()">
+        <option value="">— Pilih nama Anda —</option>
+      </select>
+      <div class="staff-preview" id="staff-preview">
+        <div class="staff-avatar" id="staff-avatar">?</div>
+        <div>
+          <div class="staff-info-name" id="staff-name-preview">—</div>
+          <div class="staff-info-job" id="staff-job-preview">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Duplicate warning will appear here -->
+    <div id="duplicate-warn" style="margin-bottom:12px;display:none;"></div>
+  </div>
+
+  <!-- ===== STATUS CARD ===== -->
+  <div class="card" id="status-card">
+    <div class="card-title">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+      </svg>
+      Status Kehadiran
+    </div>
+    <div class="card-desc">Pilih satu status yang sesuai dengan kondisi kehadiran Anda hari ini.</div>
+
+    <div class="status-grid">
+
+      <button class="status-btn" data-s="Hadir" onclick="selectStatus(this)">
+        <div class="s-check">
+          <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="s-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+        </div>
+        <span class="s-label">Hadir</span>
+      </button>
+
+      <button class="status-btn" data-s="Terlambat" onclick="selectStatus(this)">
+        <div class="s-check">
+          <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="s-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <span class="s-label">Terlambat</span>
+      </button>
+
+      <button class="status-btn" data-s="Izin" onclick="selectStatus(this)">
+        <div class="s-check">
+          <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="s-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+          </svg>
+        </div>
+        <span class="s-label">Izin</span>
+      </button>
+
+      <button class="status-btn" data-s="Sakit" onclick="selectStatus(this)">
+        <div class="s-check">
+          <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="s-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+        </div>
+        <span class="s-label">Sakit</span>
+      </button>
+
+      <button class="status-btn" data-s="Alpha" onclick="selectStatus(this)">
+        <div class="s-check">
+          <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="s-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+          </svg>
+        </div>
+        <span class="s-label">Alpha</span>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- ===== KETERANGAN CARD ===== -->
+  <div class="card" id="ket-card">
+    <div class="card-title">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="11" y2="18"/>
+      </svg>
+      Keterangan <span style="color:var(--text-subtle);font-weight:400;font-size:12px;margin-left:4px;">(opsional)</span>
+    </div>
+    <div class="form-group" style="margin-bottom:0">
+      <input type="text" id="keterangan" maxlength="120" placeholder="Contoh: Macet di jalan, ada keperluan mendadak…">
+    </div>
+  </div>
+
+  <!-- ===== SUBMIT CARD ===== -->
+  <div class="card" id="submit-card" style="padding:18px 22px;">
+    <div id="submit-alert" style="margin-bottom:12px;display:none;"></div>
+    <button class="btn-submit" id="btn-submit" onclick="submitAbsensi()" disabled>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+      Catat Kehadiran
+    </button>
+  </div>
+
+  <!-- ===== SUCCESS SCREEN ===== -->
+  <div class="card" id="success-screen">
+    <div class="success-ring">
+      <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 6L9 17l-5-5"/>
+      </svg>
+    </div>
+    <div class="success-title">Absensi Tercatat!</div>
+    <div class="success-subtitle" id="success-subtitle">Kehadiran Anda telah berhasil disimpan.</div>
+
+    <div class="success-info-card">
+      <div class="info-row">
+        <span class="info-label">Nama</span>
+        <span class="info-value" id="s-nama">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Jabatan</span>
+        <span class="info-value" id="s-jabatan">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Tanggal</span>
+        <span class="info-value" id="s-tanggal">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Jam</span>
+        <span class="info-value" id="s-jam">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Status</span>
+        <span class="info-value" id="s-status">—</span>
+      </div>
+      <div class="info-row" id="s-ket-row">
+        <span class="info-label">Keterangan</span>
+        <span class="info-value" id="s-keterangan">—</span>
+      </div>
+    </div>
+
+    <button class="btn-reset" onclick="resetForm()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;">
+        <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3"/>
+      </svg>
+      Absensi Staf Lain
+    </button>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <div class="footer-link">
+    <a href="dashboard.html">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      </svg>
+      Buka Dashboard Admin
+    </a>
+  </div>
+  <div class="footer-copy">© 2025 Admin MBG · Terminal Absensi v1.0</div>
+
+</div><!-- /terminal-wrapper -->
+
+<!-- ===== TOAST ===== -->
+<div id="toast"></div>
+
+<script>
+/* ================================================================
+   TERMINAL ABSENSI — Logic
+   Shares localStorage key: 'mbg_v2' with dashboard/app.js
+================================================================ */
+const STORE_KEY = 'mbg_v2';
+
+const AVATAR_COLORS = [
+  'linear-gradient(135deg,#2563eb,#7c3aed)',
+  'linear-gradient(135deg,#059669,#0891b2)',
+  'linear-gradient(135deg,#d97706,#ef4444)',
+  'linear-gradient(135deg,#7c3aed,#ec4899)',
+  'linear-gradient(135deg,#0891b2,#2563eb)',
+];
+
+function avatarColor(name) {
+  let n = 0;
+  for (let c of (name||'')) n += c.charCodeAt(0);
+  return AVATAR_COLORS[n % AVATAR_COLORS.length];
+}
+
+function loadDB() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) {
+      const p = JSON.parse(raw);
+      return {
+        meta: p.meta || {},
+        staf: p.staf || [],
+        absensi: p.absensi || [],
+        kontrak_history: p.kontrak_history || [],
+        catatan: p.catatan || []
+      };
+    }
+  } catch(e) {}
+  return { meta:{}, staf:[], absensi:[], kontrak_history:[], catatan:[] };
+}
+
+function saveDB(db) {
+  localStorage.setItem(STORE_KEY, JSON.stringify(db));
+}
+
+function todayStr() {
+  return new Date().toISOString().slice(0,10);
+}
+
+/* ---- Init state ---- */
+let selectedStafId = null;
+let selectedStatus = null;
+let DB = loadDB();
+
+/* ============================================================
+   CLOCK
+============================================================ */
+const DAYS_ID = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+function updateClock() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  const ss = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('clock-time').textContent = `${hh}:${mm}:${ss}`;
+  document.getElementById('clock-hari').textContent = DAYS_ID[now.getDay()];
+  document.getElementById('clock-date').textContent =
+    `${now.getDate()} ${MONTHS_ID[now.getMonth()]} ${now.getFullYear()}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+/* ============================================================
+   POPULATE STAFF DROPDOWN
+============================================================ */
+function populateStaf() {
+  const sel = document.getElementById('staf-select');
+  // Clear old options (keep placeholder)
+  while (sel.options.length > 1) sel.remove(1);
+
+  const aktif = DB.staf.filter(s => s.status === 'Aktif');
+  if (aktif.length === 0) {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = '— Belum ada staf aktif —';
+    opt.disabled = true;
+    sel.appendChild(opt);
+    return;
+  }
+  aktif.sort((a,b) => (a.nama||'').localeCompare(b.nama||''));
+  aktif.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = s.nama + (s.jabatan ? ` — ${s.jabatan}` : '');
+    sel.appendChild(opt);
+  });
+}
+
+/* ============================================================
+   ON STAF CHANGE
+============================================================ */
+function onStafChange() {
+  const sel = document.getElementById('staf-select');
+  const id  = sel.value;
+  selectedStafId = id || null;
+
+  const preview = document.getElementById('staff-preview');
+  const dupWarn = document.getElementById('duplicate-warn');
+
+  if (!id) {
+    preview.classList.remove('show');
+    dupWarn.style.display = 'none';
+    checkSubmitReady();
+    return;
+  }
+
+  const staf = DB.staf.find(s => s.id === id);
+  if (!staf) return;
+
+  /* Show avatar preview */
+  const av = document.getElementById('staff-avatar');
+  av.style.background = avatarColor(staf.nama);
+  av.textContent = (staf.nama || '?').charAt(0).toUpperCase();
+  document.getElementById('staff-name-preview').textContent = staf.nama;
+  document.getElementById('staff-job-preview').textContent  = staf.jabatan || '—';
+  preview.classList.add('show');
+
+  /* Duplicate check */
+  const today = todayStr();
+  const existing = DB.absensi.find(a => (a.stafId === id || a.id === `${id}|${today}`) && a.tanggal === today);
+  if (existing) {
+    dupWarn.style.display = 'block';
+    const existingJam = existing.jam || existing.jamMasuk || '-';
+    dupWarn.innerHTML = `
+      <div class="alert alert-warn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <div><b>${staf.nama}</b> sudah tercatat hadir hari ini dengan status <b>${existing.status || 'Tercatat'}</b> pada jam <b>${existingJam}</b>. Submisi baru akan memperbarui data hari ini.</div>
+      </div>`;
+  } else {
+    dupWarn.style.display = 'none';
+  }
+
+  checkSubmitReady();
+}
+
+/* ============================================================
+   SELECT STATUS
+============================================================ */
+function selectStatus(btn) {
+  document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedStatus = btn.dataset.s;
+  checkSubmitReady();
+}
+
+/* ============================================================
+   CHECK SUBMIT READINESS
+============================================================ */
+function checkSubmitReady() {
+  const btn = document.getElementById('btn-submit');
+  btn.disabled = !(selectedStafId && selectedStatus);
+}
+
+/* ============================================================
+   SUBMIT ABSENSI
+============================================================ */
+function submitAbsensi() {
+  if (!selectedStafId || !selectedStatus) return;
+
+  DB = loadDB(); /* fresh read */
+  const staf = DB.staf.find(s => s.id === selectedStafId);
+  if (!staf) {
+    showAlert('submit-alert', 'error', 'Staf tidak ditemukan. Muat ulang halaman.');
+    return;
+  }
+
+  const today  = todayStr();
+  const now    = new Date();
+  const jamStr = now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+  const keteranganVal = document.getElementById('keterangan').value.trim();
+
+  /* Remove old record if duplicate to stay sync with both ID schemes */
+  const recId = `${staf.id}|${today}`;
+  DB.absensi = DB.absensi.filter(a => !( (a.stafId === selectedStafId || a.id === recId) && a.tanggal === today ));
+
+  const record = {
+    id:         recId,
+    stafId:     staf.id,
+    nama:       staf.nama,
+    jabatan:    staf.jabatan || '',
+    tanggal:    today,
+    status:     selectedStatus,
+    keterangan: keteranganVal,
+    jam:        jamStr,
+    jamMasuk:   jamStr,
+    jamKeluar:  ''
+  };
+
+  DB.absensi.push(record);
+  saveDB(DB);
+
+  /* ---- Show success screen ---- */
+  hideFormCards();
+
+  const successEl = document.getElementById('success-screen');
+  successEl.style.display = 'flex';
+
+  document.getElementById('s-nama').textContent     = staf.nama;
+  document.getElementById('s-jabatan').textContent  = staf.jabatan || '—';
+  document.getElementById('s-tanggal').textContent  =
+    `${now.getDate()} ${MONTHS_ID[now.getMonth()]} ${now.getFullYear()}`;
+  document.getElementById('s-jam').textContent      = jamStr;
+  document.getElementById('s-status').innerHTML =
+    `<span class="badge-status badge-${selectedStatus}">${selectedStatus}</span>`;
+
+  const ketRow = document.getElementById('s-ket-row');
+  if (keteranganVal) {
+    document.getElementById('s-keterangan').textContent = keteranganVal;
+    ketRow.style.display = '';
+  } else {
+    ketRow.style.display = 'none';
+  }
+
+  document.getElementById('success-subtitle').textContent =
+    `Kehadiran ${staf.nama} telah berhasil disimpan pada ${jamStr}.`;
+
+  showToast('Absensi berhasil dicatat!');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ============================================================
+   RESET FORM
+============================================================ */
+function resetForm() {
+  DB = loadDB();
+  selectedStafId = null;
+  selectedStatus = null;
+
+  document.getElementById('staf-select').value = '';
+  document.getElementById('keterangan').value  = '';
+  document.getElementById('staff-preview').classList.remove('show');
+  document.getElementById('duplicate-warn').style.display = 'none';
+  document.getElementById('submit-alert').style.display   = 'none';
+  document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
+
+  document.getElementById('success-screen').style.display = 'none';
+  showFormCards();
+  checkSubmitReady();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ============================================================
+   HELPER — show / hide cards
+============================================================ */
+function hideFormCards() {
+  ['form-card','status-card','ket-card','submit-card'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+}
+function showFormCards() {
+  ['form-card','status-card','ket-card','submit-card'].forEach(id => {
+    document.getElementById(id).style.display = '';
+  });
+}
+
+function showAlert(containerId, type, msg) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.style.display = 'block';
+  el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+}
+
+/* ============================================================
+   TOAST
+============================================================ */
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+/* ============================================================
+   INIT
+============================================================ */
+populateStaf();
+checkSubmitReady();
+
+/* Re-sync DB on tab focus (in case admin added staf from dashboard) */
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    DB = loadDB();
+    populateStaf();
+  }
+});
+</script>
+</body>
+</html>
+
