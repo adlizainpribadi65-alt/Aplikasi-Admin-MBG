@@ -179,14 +179,14 @@ document.addEventListener('keydown', e => {
 let _page = 'dashboard';
 
 const PAGE_META = {
-  dashboard: ['🏠 Dashboard',       'Ringkasan administrasi kepegawaian MBG'],
-  staf:      ['👥 Data Staf',        'Kelola database seluruh staf MBG'],
-  absensi:   ['📋 Absensi Harian',   'Pencatatan kehadiran harian staf'],
-  rekap:     ['📊 Rekap Bulanan',    'Rekapitulasi kehadiran & kinerja per bulan'],
-  kontrak:   ['📄 Manajemen Kontrak','Pantau & kelola masa berlaku kontrak'],
-  excel:     ['📗 Pengelolaan Excel', 'Pusat administrasi data Microsoft Excel MBG'],
-  laporan:   ['📈 Laporan',          'Laporan administrasi & statistik'],
-  pengaturan:['⚙️ Pengaturan',       'Konfigurasi aplikasi & profil'],
+  dashboard: ['Overview',            'Ringkasan administrasi kepegawaian & operasional SPPG'],
+  staf:      ['Data Staf',           'Kelola database seluruh staf MBG'],
+  absensi:   ['Absensi Harian',      'Pencatatan kehadiran harian staf'],
+  rekap:     ['Rekap Bulanan',       'Rekapitulasi kehadiran & kinerja per bulan'],
+  kontrak:   ['Manajemen Kontrak',   'Pantau & kelola masa berlaku kontrak'],
+  excel:     ['Pengelolaan Excel',   'Pusat administrasi data Microsoft Excel MBG'],
+  laporan:   ['Laporan Eksekutif',   'Laporan administrasi & visualisasi performa'],
+  pengaturan:['Pengaturan Sistem',   'Konfigurasi aplikasi, database & profil'],
 };
 
 function navigate(page) {
@@ -235,6 +235,8 @@ function updateHeaderMeta() {
   const expiring = DB.staf.filter(s=>s.status==='Aktif'&&daysUntil(s.tglKontrakBerakhir)<=30&&daysUntil(s.tglKontrakBerakhir)>=0).length;
   const badge = document.getElementById('nb-kontrak');
   if (badge) { badge.textContent = expiring; badge.style.display = expiring ? '' : 'none'; }
+  const notiDot = document.getElementById('noti-dot');
+  if (notiDot) { notiDot.style.display = expiring ? 'block' : 'none'; }
   
   let uName = DB.meta.adminName || 'Admin MBG';
   let uRole = DB.meta.adminRole || 'Administrator';
@@ -307,84 +309,116 @@ function welcomeHtml() {
 }
 
 function renderDashCharts() {
+  renderHeroSparkline();
   renderJabatanChart();
   renderTrendChart();
 }
 
-function renderJabatanChart() {
-  const ctx = document.getElementById('c-jabatan');
+function renderHeroSparkline(range = '1W') {
+  const ctx = document.getElementById('c-hero-sparkline');
   if (!ctx || typeof Chart === 'undefined') return;
   try {
     if (ctx._ch) ctx._ch.destroy();
-    const aktif = DB.staf.filter(s=>s.status==='Aktif');
-    const jab = {};
-    aktif.forEach(s=>{ jab[s.jabatan]=(jab[s.jabatan]||0)+1; });
-    const labels = Object.keys(jab);
-    const data = Object.values(jab);
-    const colors = ['#1d4ed8','#16a34a','#d97706','#dc2626','#7c3aed','#0891b2','#ec4899','#f97316','#059669'];
+    const aktif = DB.staf.filter(s=>s.status==='Aktif').length || 10;
+    const today = todayStr();
+    const todayRecs = DB.absensi.filter(a=>a.tanggal===today);
+    const todayHadir = todayRecs.filter(a=>a.status==='Hadir'||a.status==='Terlambat').length || aktif;
+    const pct = aktif ? Math.round((todayHadir / aktif) * 100) : 100;
+
+    const tag = document.getElementById('d-hero-tag');
+    if (tag) tag.textContent = `${pct}% Kehadiran`;
+
+    const points = range === '1H' ? [90,92,91,95,94,98]
+                 : range === '24H' ? [82,85,89,91,93,95,92,96,98]
+                 : range === '1W' ? [84,86,88,91,89,94,93,97,95,98,99]
+                 : range === '1M' ? [80,82,85,84,87,89,92,90,94,95,98,100]
+                 : [78,82,85,88,90,92,94,96,98,100];
+    const labels = points.map((_, i) => `${i+1}`);
+
     ctx._ch = new Chart(ctx, {
-      type:'doughnut',
-      data:{ labels, datasets:[{data, backgroundColor:colors.slice(0,labels.length), borderWidth:2, borderColor:'#fff'}] },
-      options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'right', labels:{font:{size:11},boxWidth:12,padding:8} } } }
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          data: points,
+          borderColor: '#0284c7',
+          borderWidth: 2.8,
+          tension: 0.38,
+          fill: true,
+          backgroundColor: (context) => {
+            const chart = context.chart;
+            const {ctx, chartArea} = chart;
+            if (!chartArea) return 'rgba(56,189,248,0.18)';
+            const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            gradient.addColorStop(0, 'rgba(56, 189, 248, 0.32)');
+            gradient.addColorStop(1, 'rgba(56, 189, 248, 0.0)');
+            return gradient;
+          },
+          pointRadius: 0,
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: '#0369a1'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (c) => ` Presensi: ${c.parsed.y}%`
+            }
+          }
+        },
+        scales: {
+          x: { display: false },
+          y: { display: false, min: 65, max: 105 }
+        }
+      }
     });
-  } catch (e) { console.warn(e); }
+  } catch(e) { console.warn(e); }
 }
 
-function renderTrendChart() {
-  const ctx = document.getElementById('c-trend');
-  if (!ctx || typeof Chart === 'undefined') return;
-  try {
-    if (ctx._ch) ctx._ch.destroy();
-    const months=[]; const dH=[],dT=[],dI=[],dS=[];
-    const now=new Date();
-    for(let i=2;i>=0;i--) {
-      const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-      const ym=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-      months.push(d.toLocaleDateString('id-ID',{month:'short'}));
-      const r=DB.absensi.filter(a=>a.tanggal.startsWith(ym));
-      dH.push(r.filter(a=>a.status==='Hadir').length);
-      dT.push(r.filter(a=>a.status==='Terlambat').length);
-      dI.push(r.filter(a=>a.status==='Izin').length);
-      dS.push(r.filter(a=>a.status==='Sakit').length);
-    }
-    ctx._ch = new Chart(ctx, {
-      type:'bar',
-      data:{ labels:months, datasets:[
-        {label:'Hadir',data:dH,backgroundColor:'#16a34a',borderRadius:4},
-        {label:'Terlambat',data:dT,backgroundColor:'#d97706',borderRadius:4},
-        {label:'Izin',data:dI,backgroundColor:'#7c3aed',borderRadius:4},
-        {label:'Sakit',data:dS,backgroundColor:'#dc2626',borderRadius:4},
-      ]},
-      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12}}},
-        scales:{ x:{stacked:true,grid:{display:false}}, y:{stacked:true,beginAtZero:true} } }
-    });
-  } catch (e) { console.warn(e); }
+function setChartRange(btn, range) {
+  document.querySelectorAll('.range-pill').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderHeroSparkline(range);
 }
 
-function renderDashAlerts() {
+function renderDashAlerts(filterDays = 90) {
   const el = document.getElementById('d-alerts');
   if (!el) return;
-  const exp = DB.staf.filter(s=>s.status==='Aktif'&&daysUntil(s.tglKontrakBerakhir)<=90)
+  const maxD = Number(filterDays) || 90;
+  const exp = DB.staf.filter(s=>s.status==='Aktif'&&daysUntil(s.tglKontrakBerakhir)<=maxD)
     .sort((a,b)=>daysUntil(a.tglKontrakBerakhir)-daysUntil(b.tglKontrakBerakhir));
   if (!exp.length) {
-    el.innerHTML = emptyHtml('✅','Tidak ada kontrak yang akan berakhir dalam 90 hari');
+    el.innerHTML = emptyHtml('✅',`Tidak ada kontrak yang akan berakhir dalam ${maxD} hari`);
     return;
   }
-  el.innerHTML = exp.map(s=>{
-    const d=daysUntil(s.tglKontrakBerakhir);
-    const cls=d<=14?'err':'warn';
-    return `<div class="flex items-center gap-3" style="padding:10px 0;border-bottom:1px solid var(--gray-100)">
-      <div style="width:44px;height:44px;border-radius:9px;background:${d<=14?'var(--red-light)':'var(--yellow-light)'};display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0">
-        <span style="font-size:1rem;font-weight:800;color:${d<=14?'var(--red)':'var(--yellow)'};line-height:1">${d}</span>
-        <span style="font-size:.58rem;color:var(--gray-400)">hari</span>
+  el.innerHTML = exp.slice(0, 5).map(s=>{
+    const d = daysUntil(s.tglKontrakBerakhir);
+    const isUrgent = d <= 14;
+    return `<div class="activity-item-row">
+      <div style="display:flex;align-items:center;gap:12px;min-width:0">
+        <div class="air-icon" style="background:${isUrgent?'#fee2e2':'#fef3c7'};color:${isUrgent?'#dc2626':'#d97706'}">
+          ${isUrgent ? '⚠️' : '📄'}
+        </div>
+        <div style="min-width:0">
+          <div class="air-name">${esc(s.nama)}</div>
+          <div class="air-sub">${esc(s.jabatan)} · Selesai ${fmtShort(s.tglKontrakBerakhir)}</div>
+        </div>
       </div>
-      <div class="flex-1">
-        <div class="font-semi text-sm">${esc(s.nama)}</div>
-        <div class="text-xs text-muted">${s.jabatan} · ${fmtShort(s.tglKontrakBerakhir)}</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+        <span class="badge ${isUrgent?'br':'by'}">Sisa ${d} Hari</span>
+        <button class="btn btn-xs btn-primary" onclick="openPerpanjang('${s.id}')">Perpanjang</button>
       </div>
-      <button class="btn btn-xs btn-primary" onclick="openPerpanjang('${s.id}')">Perpanjang</button>
     </div>`;
   }).join('');
+}
+
+function filterDashAlerts(val) {
+  const days = val === 'all' ? 90 : (Number(val) || 90);
+  renderDashAlerts(days);
 }
 
 function renderDashJabatan() {

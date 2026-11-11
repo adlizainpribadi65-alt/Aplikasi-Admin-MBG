@@ -40,7 +40,7 @@
 ===================================================== -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-logo">
-    <div class="logo-icon">🍱</div>
+    <div class="logo-icon" onclick="navigate('dashboard')" title="Admin MBG">🍱</div>
     <div class="logo-text">
       <h1>Admin MBG</h1>
       <span>Administrasi Kepegawaian</span>
@@ -48,55 +48,42 @@
   </div>
 
   <nav class="sidebar-nav">
-    <div class="nav-label">Utama</div>
-    <div class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
-      <span class="icon">🏠</span> Dashboard
+    <div class="nav-label">Menu</div>
+    <div class="nav-item active" data-page="dashboard" data-tooltip="Overview Dashboard" onclick="navigate('dashboard')">
+      <span class="icon">⊞</span> <span>Dashboard</span>
     </div>
-
-    <div class="nav-label">Kepegawaian</div>
-    <div class="nav-item" data-page="staf" onclick="navigate('staf')">
-      <span class="icon">👥</span> Data Staf
+    <div class="nav-item" data-page="staf" data-tooltip="Data Staf" onclick="navigate('staf')">
+      <span class="icon">👥</span> <span>Data Staf</span>
     </div>
-    <div class="nav-item" data-page="absensi" onclick="navigate('absensi')">
-      <span class="icon">📋</span> Absensi Harian
+    <div class="nav-item" data-page="absensi" data-tooltip="Absensi Harian" onclick="navigate('absensi')">
+      <span class="icon">📋</span> <span>Absensi Harian</span>
     </div>
-    <div class="nav-item" data-page="rekap" onclick="navigate('rekap')">
-      <span class="icon">📊</span> Rekap Bulanan
+    <div class="nav-item" data-page="rekap" data-tooltip="Rekap Bulanan" onclick="navigate('rekap')">
+      <span class="icon">📊</span> <span>Rekap Bulanan</span>
     </div>
-    <div class="nav-item" data-page="kontrak" onclick="navigate('kontrak')">
-      <span class="icon">📄</span> Manajemen Kontrak
+    <div class="nav-item" data-page="kontrak" data-tooltip="Manajemen Kontrak" onclick="navigate('kontrak')">
+      <span class="icon">📄</span> <span>Manajemen Kontrak</span>
       <span class="badge" id="nb-kontrak" style="display:none">0</span>
     </div>
-
-    <div class="nav-label">Administrasi</div>
-    <div class="nav-item" data-page="excel" onclick="navigate('excel')">
-      <span class="icon">📗</span> Pengelolaan Excel
+    <div class="nav-item" data-page="excel" data-tooltip="Pengelolaan Excel" onclick="navigate('excel')">
+      <span class="icon">📗</span> <span>Pengelolaan Excel</span>
     </div>
-    <div class="nav-item" data-page="laporan" onclick="navigate('laporan')">
-      <span class="icon">📈</span> Laporan
+    <div class="nav-item" data-page="laporan" data-tooltip="Laporan Eksekutif" onclick="navigate('laporan')">
+      <span class="icon">📈</span> <span>Laporan</span>
     </div>
-    <div class="nav-item" data-page="pengaturan" onclick="navigate('pengaturan')">
-      <span class="icon">⚙️</span> Pengaturan
+    <div class="nav-item" data-page="pengaturan" data-tooltip="Pengaturan Sistem" onclick="navigate('pengaturan')">
+      <span class="icon">⚙️</span> <span>Pengaturan</span>
     </div>
   </nav>
 
-  <div style="padding:10px 14px;border-top:1px solid rgba(255,255,255,.08)">
-    <a href="/" style="display:flex;align-items:center;gap:8px;font-size:.76rem;color:#93c5fd;font-weight:600;text-decoration:none">
-      <span style="font-size:1rem">🚀</span> Portal Semua Projek
-    </a>
+  <div class="sidebar-bottom">
+    <a href="/" class="sidebar-hub-btn" title="Buka Portal Hub Semua Proyek">🚀</a>
+    <button class="btn-sidebar-logout" onclick="logoutMBG()" title="Keluar / Logout">🚪</button>
   </div>
 
-  <div class="sidebar-user" style="display:flex;align-items:center;justify-content:space-between">
-    <div style="display:flex;align-items:center;gap:9px;min-width:0;overflow:hidden">
-      <div class="user-avatar" id="h-user-init">A</div>
-      <div class="user-info">
-        <div class="name" id="h-user-name">Admin MBG</div>
-        <div class="role" id="h-user-role">Administrator</div>
-      </div>
-    </div>
-    <button onclick="logoutMBG()" title="Keluar / Logout" style="background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:5px 8px;font-size:0.8rem;cursor:pointer;flex-shrink:0" onmouseover="this.style.background='rgba(239,68,68,0.25)'" onmouseout="this.style.background='rgba(239,68,68,0.12)'">
-      🚪
-    </button>
+  <!-- Hidden legacy elements for JS compatibility -->
+  <div class="sidebar-user" style="display:none">
+    <div class="role" id="h-user-role">Administrator</div>
   </div>
 </aside>
 
@@ -105,107 +92,194 @@
 ===================================================== -->
 <div class="main">
 
-  <!-- HEADER -->
+  <!-- HEADER (MODERN COINVIEW HEADER) -->
   <header class="header">
     <button class="header-toggle" id="mob-toggle">☰</button>
     <div class="header-info">
-      <div class="header-title" id="h-title">Dashboard</div>
-      <div class="header-sub" id="h-sub">Ringkasan administrasi kepegawaian MBG</div>
+      <div class="header-title" id="h-title">Overview</div>
+      <div class="header-sub" id="h-sub">Sistem Administrasi Kepegawaian & Pengelolaan Data MBG</div>
     </div>
-    <a href="/" class="btn btn-outline btn-sm" style="display:inline-flex;align-items:center;gap:5px;font-size:.76rem;padding:4px 10px;border-radius:99px;border:1px solid var(--gray-300);text-decoration:none;color:var(--gray-700);white-space:nowrap" title="Buka Portal Hub Semua Proyek">🚀 Hub Proyek</a>
-    <div class="header-date">📅 <span id="h-date"></span></div>
-    <button class="hbtn" title="Pengaturan" onclick="navigate('pengaturan')">⚙️</button>
-    <button class="hbtn" title="Keluar / Logout" onclick="logoutMBG()" style="color:#f87171">🚪</button>
+
+    <!-- Header Actions (Search, Bell, User Capsule Pill) -->
+    <div class="header-actions">
+      <button class="header-round-btn" title="Cari data staf..." onclick="navigate('staf')">🔍</button>
+      <button class="header-round-btn" title="Monitoring Kontrak Kerja" onclick="navigate('kontrak')">
+        🔔
+        <span class="noti-dot" id="noti-dot" style="display:none"></span>
+      </button>
+
+      <!-- User Capsule Pill -->
+      <div class="user-pill" onclick="navigate('pengaturan')" title="Profil Admin">
+        <div class="user-pill-avatar" id="h-user-init">A</div>
+        <span class="user-pill-name" id="h-user-name">Admin MBG</span>
+        <span class="user-pill-arrow">⌵</span>
+      </div>
+
+      <!-- Hidden legacy date holder for JS -->
+      <span id="h-date" style="display:none"></span>
+    </div>
   </header>
 
   <div class="pages">
 
 <!-- =====================================================
-     PAGE: DASHBOARD
+     PAGE: DASHBOARD (COINVIEW DASHBOARD LAYOUT)
 ===================================================== -->
 <div class="page active" id="page-dashboard">
   <!-- Welcome (shown when empty) -->
   <div id="d-welcome"></div>
 
-  <!-- Stats (always visible) -->
-  <div class="stats" id="d-stats">
-    <div class="stat">
-      <div class="stat-ic si-blue">👥</div>
-      <div>
-        <div class="stat-val" id="d-total">0</div>
-        <div class="stat-lbl">Total Staf</div>
+  <!-- TOP SECTION: Portfolio Hero (Left) + Pastel Assets (Right) -->
+  <div class="dash-overview-grid" id="d-stats">
+    
+    <!-- 1. Hero Portfolio Card (Left) -->
+    <div class="hero-portfolio-card">
+      <div class="hero-card-head">
+        <div>
+          <div class="hero-section-title">Portfolio Kepegawaian</div>
+          <div class="hero-balance-val"><span id="d-total">0</span> <span style="font-size:1.05rem;font-weight:600;color:var(--text-muted)">Total Staf</span></div>
+        </div>
+        <div style="font-size:1.25rem;color:var(--gray-400);cursor:pointer">⋮</div>
+      </div>
+
+      <!-- Sparkline Area -->
+      <div class="hero-chart-wrap">
+        <canvas id="c-hero-sparkline"></canvas>
+        <div class="hero-floating-tag">
+          <span id="d-hero-tag">Presensi 100%</span>
+        </div>
+      </div>
+
+      <!-- Filter Range Pills -->
+      <div class="hero-range-pills">
+        <button class="range-pill" onclick="setChartRange(this,'1H')">1H</button>
+        <button class="range-pill" onclick="setChartRange(this,'24H')">24H</button>
+        <button class="range-pill active" onclick="setChartRange(this,'1W')">1W</button>
+        <button class="range-pill" onclick="setChartRange(this,'1M')">1M</button>
+        <button class="range-pill" onclick="setChartRange(this,'1Y')">1Y</button>
+        <button class="range-pill" onclick="setChartRange(this,'ALL')">ALL</button>
       </div>
     </div>
-    <div class="stat">
-      <div class="stat-ic si-green">✅</div>
-      <div>
-        <div class="stat-val" id="d-aktif">0</div>
-        <div class="stat-lbl">Staf Aktif</div>
+
+    <!-- 2. Your Assets / 3 Pastel Metric Cards (Right) -->
+    <div class="pastel-assets-col">
+      <div class="pastel-col-header">
+        <h3>Metrik Utama SPPG</h3>
+        <span class="pastel-header-icon" title="Urutkan" onclick="navigate('staf')">⇄</span>
+      </div>
+
+      <div class="pastel-cards-grid">
+        <!-- Lavender Card: Staf Aktif -->
+        <div class="pastel-card p-lavender" onclick="navigate('staf')">
+          <div class="pc-top">
+            <div class="pc-val"><span id="d-aktif">0</span> Staf</div>
+            <span class="pc-dots">⋮</span>
+          </div>
+          <div class="pc-sub">Staf Aktif Bekerja</div>
+          <div class="pc-bot">
+            <div class="pc-icon-circle">👥</div>
+            <span class="pc-badge">+100% Aktif</span>
+          </div>
+        </div>
+
+        <!-- Mint Green Card: Hadir Hari Ini -->
+        <div class="pastel-card p-mint" onclick="navigate('absensi')">
+          <div class="pc-top">
+            <div class="pc-val"><span id="d-hadir">0/0</span></div>
+            <span class="pc-dots">⋮</span>
+          </div>
+          <div class="pc-sub">Hadir Hari Ini</div>
+          <div class="pc-bot">
+            <div class="pc-icon-circle">✅</div>
+            <span class="pc-badge" style="color:#047857">+0.31% Presensi</span>
+          </div>
+        </div>
+
+        <!-- Soft Gold Cream Card: Kontrak ≤30 Hari -->
+        <div class="pastel-card p-cream" onclick="navigate('kontrak')">
+          <div class="pc-top">
+            <div class="pc-val"><span id="d-exp30">0</span> Kontrak</div>
+            <span class="pc-dots">⋮</span>
+          </div>
+          <div class="pc-sub">Jatuh Tempo ≤30 Hari</div>
+          <div class="pc-bot">
+            <div class="pc-icon-circle">⚠️</div>
+            <span class="pc-badge" style="color:#b45309">Urgensi Segera</span>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="stat">
-      <div class="stat-ic si-gray">❌</div>
-      <div>
-        <div class="stat-val" id="d-nonaktif">0</div>
-        <div class="stat-lbl">Nonaktif</div>
-      </div>
-    </div>
-    <div class="stat">
-      <div class="stat-ic si-cyan">📋</div>
-      <div>
-        <div class="stat-val" id="d-hadir">0/0</div>
-        <div class="stat-lbl">Hadir Hari Ini</div>
-      </div>
-    </div>
-    <div class="stat">
-      <div class="stat-ic si-red">⚠️</div>
-      <div>
-        <div class="stat-val" id="d-exp30">0</div>
-        <div class="stat-lbl">Kontrak ≤30 Hari</div>
-      </div>
-    </div>
+
   </div>
 
-  <!-- Charts & Info (hidden when empty) -->
-  <div id="d-charts">
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-head">
-          <div class="card-title">🥧 Distribusi Jabatan</div>
-        </div>
-        <div class="card-body">
-          <div style="height:220px"><canvas id="c-jabatan"></canvas></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-head">
-          <div class="card-title">📈 Tren Kehadiran 3 Bulan</div>
-        </div>
-        <div class="card-body">
-          <div style="height:220px"><canvas id="c-trend"></canvas></div>
-        </div>
-      </div>
-    </div>
+  <!-- Hidden holder for nonaktif to keep JS set('d-nonaktif', ...) intact -->
+  <span id="d-nonaktif" style="display:none">0</span>
 
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-head">
-          <div class="card-title">⚠️ Kontrak Akan Berakhir (≤90 Hari)</div>
-          <button class="btn btn-outline btn-sm" onclick="navigate('kontrak')">Lihat Semua →</button>
+  <!-- BOTTOM SECTION: Market Activity/Alerts (Left) + Dark Spotlight Card (Right) -->
+  <div class="dash-bottom-grid" id="d-charts">
+    
+    <!-- Left Column: Activity, Alerts & Distribution -->
+    <div class="dash-activity-panel">
+      <div class="panel-header-row">
+        <h3 class="panel-heading">Monitoring Kepegawaian & Kontrak</h3>
+        <div class="panel-filters">
+          <select class="mini-filter-select" onchange="filterDashAlerts(this.value)">
+            <option value="all">Semua Urgensi ⌵</option>
+            <option value="30">≤30 Hari ⌵</option>
+            <option value="90">≤90 Hari ⌵</option>
+          </select>
+          <button class="btn btn-sm btn-ghost" onclick="navigate('kontrak')">Lihat Semua →</button>
         </div>
-        <div class="card-body p-0" style="padding:0 18px">
+      </div>
+
+      <!-- Alerts & Contracts List -->
+      <div class="card mb-3" style="border-radius:20px;box-shadow:var(--shadow-sm)">
+        <div class="card-body p-0" style="padding:10px 18px">
           <div id="d-alerts"></div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-head">
-          <div class="card-title">📊 Sebaran Jabatan Staf Aktif</div>
+
+      <!-- Charts Row (retained 100%!) -->
+      <div class="grid-2 mt-2">
+        <div class="card" style="border-radius:20px">
+          <div class="card-head">
+            <div class="card-title">🥧 Distribusi Jabatan</div>
+          </div>
+          <div class="card-body">
+            <div style="height:210px"><canvas id="c-jabatan"></canvas></div>
+          </div>
         </div>
-        <div class="card-body">
-          <div id="d-jabatan"></div>
+        <div class="card" style="border-radius:20px">
+          <div class="card-head">
+            <div class="card-title">📈 Tren Kehadiran 3 Bulan</div>
+          </div>
+          <div class="card-body">
+            <div style="height:210px"><canvas id="c-trend"></canvas></div>
+          </div>
         </div>
       </div>
+
+      <div id="d-jabatan" class="mt-3"></div>
     </div>
+
+    <!-- Right Column: Dark Feature Spotlight Card (Coinview Earn style!) -->
+    <div class="dash-spotlight-card">
+      <div class="spotlight-badge">Suite Administrasi MBG</div>
+      <h2 class="spotlight-title">Kelola <span class="spotlight-pill">Excel</span> & Laporan dengan Cepat!</h2>
+      <p class="spotlight-desc">Didukung 10 modul otomatis, SheetJS native multi-sheet (.xlsx), kalkulasi kehadiran, dan cetak perpanjangan kontrak kerja instan.</p>
+      
+      <div class="spotlight-btn-wrap">
+        <button class="btn-spotlight-action" onclick="navigate('excel')">Buka Excel Hub →</button>
+      </div>
+
+      <!-- Sleek abstract geometric line decoration -->
+      <svg class="spotlight-graphic" viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 100 L70 40 L120 70 L180 10" stroke="rgba(255,255,255,0.18)" stroke-width="2"/>
+        <rect x="80" y="30" width="90" height="70" rx="8" stroke="rgba(255,255,255,0.14)" stroke-width="1.5" transform="rotate(12 80 30)"/>
+        <rect x="60" y="45" width="80" height="60" rx="8" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" transform="rotate(-6 60 45)"/>
+      </svg>
+    </div>
+
   </div>
 </div>
 
