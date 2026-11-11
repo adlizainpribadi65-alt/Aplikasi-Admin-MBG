@@ -585,6 +585,12 @@
       if (sess) {
         const parsed = JSON.parse(sess);
         if (parsed && parsed.name) {
+          // Jika ada parameter ?logout=1 di URL, jangan auto-redirect
+          const urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.get('logout') !== '1') {
+            window.location.replace('dashboard.html');
+            return;
+          }
           const banner = document.getElementById('banner-active-sess');
           document.getElementById('banner-sess-name').textContent = parsed.name + ' (' + (parsed.role || 'User') + ')';
           banner.classList.add('show');

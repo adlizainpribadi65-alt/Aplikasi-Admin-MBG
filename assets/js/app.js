@@ -261,7 +261,7 @@ function logoutMBG() {
   if (confirm('Keluar dari sistem Admin MBG?')) {
     sessionStorage.removeItem('mbg_session');
     localStorage.removeItem('mbg_session');
-    window.location.href = 'index.html';
+    window.location.href = 'index.html?logout=1';
   }
 }
 
