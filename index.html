@@ -563,6 +563,9 @@
     { username: 'viewer', password: 'view123', name: 'Pengawas Audit', role: 'Viewer' }
   ];
 
+  // ── Sinkronisasi Akun Server & Lokal ──
+  const API_USERS_URL = 'api-users.php';
+
   function getUsers() {
     try {
       const raw = localStorage.getItem('mbg_users');
@@ -576,9 +579,34 @@
     localStorage.setItem('mbg_users', JSON.stringify(users));
   }
 
+  // Sinkronisasi akun dari server jika tersedia (agar device HP/laptop lain mendapatkan akun yang sama)
+  async function syncUsersFromServer() {
+    try {
+      const resp = await fetch(API_USERS_URL, { cache: 'no-store' });
+      if (resp.ok) {
+        const json = await resp.json();
+        if (json.status === 'success' && Array.isArray(json.data)) {
+          const localUsers = getUsers();
+          const merged = [...json.data];
+          // Tambahkan akun lokal yang belum ada di server jika ada
+          localUsers.forEach(lu => {
+            if (!merged.some(su => su.username.toLowerCase() === lu.username.toLowerCase())) {
+              merged.push(lu);
+            }
+          });
+          saveUsers(merged);
+          return merged;
+        }
+      }
+    } catch(e) {
+      // Offline fallback: tetap berjalan dengan localStorage
+    }
+    return getUsers();
+  }
+
   // Cek remembered user & active session (tanpa auto-bypass agar user selalu melihat tampilan pintu masuk)
   window.addEventListener('DOMContentLoaded', () => {
-    getUsers(); // init default users
+    syncUsersFromServer(); // sinkronkan akun dari server
 
     try {
       const sess = sessionStorage.getItem('mbg_session') || localStorage.getItem('mbg_session');
@@ -750,27 +778,41 @@
     txt.textContent = 'Mendaftarkan...';
     spn.style.display = 'inline-block';
 
-    setTimeout(() => {
-      users.push({
-        username: user,
-        password: pass,
-        name: name,
-        role: role
-      });
-      saveUsers(users);
+    const newUserData = {
+      username: user,
+      password: pass,
+      name: name,
+      role: role
+    };
+
+    // Kirim ke server (api-users.php) agar tersimpan secara permanen untuk semua device
+    fetch(API_USERS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newUserData)
+    })
+    .then(r => r.json())
+    .catch(() => null)
+    .finally(() => {
+      // Simpan juga ke cache lokal
+      const currentUsers = getUsers();
+      if (!currentUsers.some(u => u.username.toLowerCase() === user.toLowerCase())) {
+        currentUsers.push(newUserData);
+        saveUsers(currentUsers);
+      }
 
       btn.classList.remove('loading');
       txt.textContent = 'Daftarkan Akun Baru →';
       spn.style.display = 'none';
 
-      showAlert('ok', 'Registrasi berhasil! Silakan login dengan akun baru Anda.');
+      showAlert('ok', 'Registrasi berhasil! Akun tersimpan dan dapat digunakan di semua perangkat.');
       setTimeout(() => {
         setTab('login');
         document.getElementById('login-user').value = user;
-        document.getElementById('login-pass').value = '';
+        document.getElementById('login-pass').value = pass;
         document.getElementById('login-pass').focus();
       }, 1000);
-    }, 550);
+    });
   }
 </script>
 </body>

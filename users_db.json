@@ -1,0 +1,20 @@
+[
+  {
+    "username": "admin",
+    "password": "admin123",
+    "name": "Adli Zain Pribadi",
+    "role": "Administrator"
+  },
+  {
+    "username": "operator",
+    "password": "op123",
+    "name": "Operator SPPG",
+    "role": "Operator"
+  },
+  {
+    "username": "viewer",
+    "password": "view123",
+    "name": "Pengawas Audit",
+    "role": "Viewer"
+  }
+]

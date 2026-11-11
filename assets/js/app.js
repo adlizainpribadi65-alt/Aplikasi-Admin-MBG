@@ -27,7 +27,7 @@ function loadDB() {
       // ensure all keys exist
       return { ...emptyDB(), ...parsed };
     }
-  } catch(e) {}
+  } catch (e) { }
   return emptyDB();
 }
 
@@ -41,10 +41,10 @@ let DB = loadDB();
 //  UTILS
 // ============================================================
 const JABATANS = [
-  'Kepala SPPG','Admin MBG','Ahli Gizi','Juru Masak',
-  'Asisten Juru Masak','Petugas Distribusi','Kebersihan','Keamanan','Driver','Lainnya'
+  'Kepala SPPG', 'Admin MBG', 'Ahli Gizi', 'Juru Masak',
+  'Asisten Juru Masak', 'Petugas Distribusi', 'Kebersihan', 'Keamanan', 'Driver', 'Lainnya'
 ];
-const STATUS_ABS = ['Hadir','Terlambat','Izin','Sakit','Alpha'];
+const STATUS_ABS = ['Hadir', 'Terlambat', 'Izin', 'Sakit', 'Alpha'];
 const STATUS_ABS_COLOR = {
   Hadir: 'bg', Terlambat: 'by', Izin: 'bp', Sakit: 'br', Alpha: 'bgr', '': 'bgr'
 };
@@ -58,55 +58,55 @@ const AVATAR_COLORS = [
 
 function avatarColor(name) {
   let n = 0;
-  for (let c of (name||'')) n += c.charCodeAt(0);
+  for (let c of (name || '')) n += c.charCodeAt(0);
   return AVATAR_COLORS[n % AVATAR_COLORS.length];
 }
 
 function fmt(str) {
   if (!str) return '-';
   const d = new Date(str + 'T00:00:00');
-  return d.toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' });
+  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
 }
 function fmtShort(str) {
   if (!str) return '-';
   const d = new Date(str + 'T00:00:00');
-  return d.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
+  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 function fmtCur(n) {
-  return 'Rp ' + (n||0).toLocaleString('id-ID');
+  return 'Rp ' + (n || 0).toLocaleString('id-ID');
 }
 function daysUntil(str) {
   if (!str) return 9999;
   const t = new Date(str + 'T00:00:00');
-  const now = new Date(); now.setHours(0,0,0,0);
+  const now = new Date(); now.setHours(0, 0, 0, 0);
   return Math.round((t - now) / 86400000);
 }
-function todayStr() { return new Date().toISOString().slice(0,10); }
+function todayStr() { return new Date().toISOString().slice(0, 10); }
 function curYM() {
   const n = new Date();
-  return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;
+  return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}`;
 }
 function ymLabel(ym) {
-  const [y,m] = ym.split('-');
-  return new Date(y, m-1, 1).toLocaleDateString('id-ID', { month:'long', year:'numeric' });
+  const [y, m] = ym.split('-');
+  return new Date(y, m - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
 }
 function workDaysInMonth(ym) {
-  const [y,m] = ym.split('-').map(Number);
-  const days = new Date(y,m,0).getDate();
+  const [y, m] = ym.split('-').map(Number);
+  const days = new Date(y, m, 0).getDate();
   let w = 0;
-  for (let d=1;d<=days;d++) {
-    const day = new Date(y,m-1,d).getDay();
-    if (day!==0 && day!==6) w++;
+  for (let d = 1; d <= days; d++) {
+    const day = new Date(y, m - 1, d).getDay();
+    if (day !== 0 && day !== 6) w++;
   }
   return w;
 }
 function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 function nextId(prefix) {
-  const nums = DB.staf.filter(s=>s.id.startsWith(prefix)).map(s=>parseInt(s.id.replace(prefix,''))||0);
+  const nums = DB.staf.filter(s => s.id.startsWith(prefix)).map(s => parseInt(s.id.replace(prefix, '')) || 0);
   const max = nums.length ? Math.max(...nums) : 0;
-  return prefix + String(max+1).padStart(3,'0');
+  return prefix + String(max + 1).padStart(3, '0');
 }
 function csvDownload(rows, filename) {
   // Gunakan 'sep=;' dan pemisah titik koma agar Microsoft Excel (khususnya regional Indonesia/Windows) 100% membagi ke kolom A, B, C, D
@@ -153,14 +153,14 @@ function exportToExcelTable(sheetTitle, headers, rows, filename) {
 // ============================================================
 //  TOAST
 // ============================================================
-function toast(msg, type='ok') {
-  const icons = {ok:'✅',err:'❌',warn:'⚠️',info:'ℹ️'};
+function toast(msg, type = 'ok') {
+  const icons = { ok: '✅', err: '❌', warn: '⚠️', info: 'ℹ️' };
   const c = document.getElementById('toasts');
   const el = document.createElement('div');
   el.className = `toast ${type}`;
-  el.innerHTML = `<span>${icons[type]||'ℹ️'}</span><span style="flex:1">${msg}</span>`;
+  el.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span style="flex:1">${msg}</span>`;
   c.appendChild(el);
-  setTimeout(()=>{ el.style.transition='all .3s'; el.style.opacity='0'; el.style.transform='translateY(8px)'; setTimeout(()=>el.remove(),300); }, 3000);
+  setTimeout(() => { el.style.transition = 'all .3s'; el.style.opacity = '0'; el.style.transform = 'translateY(8px)'; setTimeout(() => el.remove(), 300); }, 3000);
 }
 
 // ============================================================
@@ -170,7 +170,7 @@ function openModal(id) { document.getElementById(id)?.classList.add('open'); }
 function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') document.querySelectorAll('.overlay.open').forEach(m=>m.classList.remove('open'));
+  if (e.key === 'Escape') document.querySelectorAll('.overlay.open').forEach(m => m.classList.remove('open'));
 });
 
 // ============================================================
@@ -179,29 +179,29 @@ document.addEventListener('keydown', e => {
 let _page = 'dashboard';
 
 const PAGE_META = {
-  dashboard: ['Overview',            'Ringkasan administrasi kepegawaian & operasional SPPG'],
-  staf:      ['Data Staf',           'Kelola database seluruh staf MBG'],
-  absensi:   ['Absensi Harian',      'Pencatatan kehadiran harian staf'],
-  rekap:     ['Rekap Bulanan',       'Rekapitulasi kehadiran & kinerja per bulan'],
-  kontrak:   ['Manajemen Kontrak',   'Pantau & kelola masa berlaku kontrak'],
-  excel:     ['Pengelolaan Excel',   'Pusat administrasi data Microsoft Excel MBG'],
-  laporan:   ['Laporan Eksekutif',   'Laporan administrasi & visualisasi performa'],
-  pengaturan:['Pengaturan Sistem',   'Konfigurasi aplikasi, database & profil'],
+  dashboard: ['Overview', 'Ringkasan administrasi kepegawaian & operasional SPPG'],
+  staf: ['Data Staf', 'Kelola database seluruh staf MBG'],
+  absensi: ['Absensi Harian', 'Pencatatan kehadiran harian staf'],
+  rekap: ['Rekap Bulanan', 'Rekapitulasi kehadiran & kinerja per bulan'],
+  kontrak: ['Manajemen Kontrak', 'Pantau & kelola masa berlaku kontrak'],
+  excel: ['Pengelolaan Excel', 'Pusat administrasi data Microsoft Excel MBG'],
+  laporan: ['Laporan Eksekutif', 'Laporan administrasi & visualisasi performa'],
+  pengaturan: ['Pengaturan Sistem', 'Konfigurasi aplikasi, database & profil'],
 };
 
 function navigate(page) {
   _page = page;
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  const targetPage = document.getElementById('page-'+page);
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const targetPage = document.getElementById('page-' + page);
   if (targetPage) targetPage.classList.add('active');
-  document.querySelectorAll(`.nav-item[data-page="${page}"]`).forEach(n=>n.classList.add('active'));
-  const [title,sub] = PAGE_META[page]||['Admin MBG',''];
+  document.querySelectorAll(`.nav-item[data-page="${page}"]`).forEach(n => n.classList.add('active'));
+  const [title, sub] = PAGE_META[page] || ['Admin MBG', ''];
   const hTitle = document.getElementById('h-title');
   if (hTitle) hTitle.textContent = title;
   const hSub = document.getElementById('h-sub');
   if (hSub) hSub.textContent = sub;
-  
+
   // close mobile off-canvas if open
   if (window.innerWidth <= 640) {
     document.getElementById('sidebar')?.classList.remove('open');
@@ -232,12 +232,12 @@ function navigate(page) {
 }
 
 function updateHeaderMeta() {
-  const expiring = DB.staf.filter(s=>s.status==='Aktif'&&daysUntil(s.tglKontrakBerakhir)<=30&&daysUntil(s.tglKontrakBerakhir)>=0).length;
+  const expiring = DB.staf.filter(s => s.status === 'Aktif' && daysUntil(s.tglKontrakBerakhir) <= 30 && daysUntil(s.tglKontrakBerakhir) >= 0).length;
   const badge = document.getElementById('nb-kontrak');
   if (badge) { badge.textContent = expiring; badge.style.display = expiring ? '' : 'none'; }
   const notiDot = document.getElementById('noti-dot');
   if (notiDot) { notiDot.style.display = expiring ? 'block' : 'none'; }
-  
+
   let uName = DB.meta.adminName || 'Admin MBG';
   let uRole = DB.meta.adminRole || 'Administrator';
   try {
@@ -247,7 +247,7 @@ function updateHeaderMeta() {
       if (sess.name) uName = sess.name;
       if (sess.role) uRole = sess.role;
     }
-  } catch(e) {}
+  } catch (e) { }
 
   const elName = document.getElementById('h-user-name');
   const elRole = document.getElementById('h-user-role');
@@ -269,24 +269,24 @@ function logoutMBG() {
 //  DASHBOARD
 // ============================================================
 function renderDash() {
-  const aktif = DB.staf.filter(s=>s.status==='Aktif').length;
+  const aktif = DB.staf.filter(s => s.status === 'Aktif').length;
   const total = DB.staf.length;
-  const nonaktif = DB.staf.filter(s=>s.status==='Nonaktif').length;
-  const exp30 = DB.staf.filter(s=>s.status==='Aktif'&&daysUntil(s.tglKontrakBerakhir)<=30&&daysUntil(s.tglKontrakBerakhir)>=0).length;
-  const exp90 = DB.staf.filter(s=>s.status==='Aktif'&&daysUntil(s.tglKontrakBerakhir)<=90&&daysUntil(s.tglKontrakBerakhir)>=0).length;
+  const nonaktif = DB.staf.filter(s => s.status === 'Nonaktif').length;
+  const exp30 = DB.staf.filter(s => s.status === 'Aktif' && daysUntil(s.tglKontrakBerakhir) <= 30 && daysUntil(s.tglKontrakBerakhir) >= 0).length;
+  const exp90 = DB.staf.filter(s => s.status === 'Aktif' && daysUntil(s.tglKontrakBerakhir) <= 90 && daysUntil(s.tglKontrakBerakhir) >= 0).length;
 
   const today = todayStr();
-  const todayRecs = DB.absensi.filter(a=>a.tanggal===today);
-  const todayHadir = todayRecs.filter(a=>a.status==='Hadir'||a.status==='Terlambat').length;
+  const todayRecs = DB.absensi.filter(a => a.tanggal === today);
+  const todayHadir = todayRecs.filter(a => a.status === 'Hadir' || a.status === 'Terlambat').length;
 
-  set('d-total',total); set('d-aktif',aktif); set('d-nonaktif',nonaktif);
-  set('d-hadir',todayHadir+'/'+aktif); set('d-exp30',exp30);
+  set('d-total', total); set('d-aktif', aktif); set('d-nonaktif', nonaktif);
+  set('d-hadir', todayHadir + '/' + aktif); set('d-exp30', exp30);
 
   if (!total) {
     setHtml('d-welcome', welcomeHtml());
     document.getElementById('d-charts')?.classList.add('hidden');
   } else {
-    setHtml('d-welcome','');
+    setHtml('d-welcome', '');
     document.getElementById('d-charts')?.classList.remove('hidden');
     renderDashCharts();
     renderDashAlerts();
@@ -319,21 +319,21 @@ function renderHeroSparkline(range = '1W') {
   if (!ctx || typeof Chart === 'undefined') return;
   try {
     if (ctx._ch) ctx._ch.destroy();
-    const aktif = DB.staf.filter(s=>s.status==='Aktif').length || 10;
+    const aktif = DB.staf.filter(s => s.status === 'Aktif').length || 10;
     const today = todayStr();
-    const todayRecs = DB.absensi.filter(a=>a.tanggal===today);
-    const todayHadir = todayRecs.filter(a=>a.status==='Hadir'||a.status==='Terlambat').length || aktif;
+    const todayRecs = DB.absensi.filter(a => a.tanggal === today);
+    const todayHadir = todayRecs.filter(a => a.status === 'Hadir' || a.status === 'Terlambat').length || aktif;
     const pct = aktif ? Math.round((todayHadir / aktif) * 100) : 100;
 
     const tag = document.getElementById('d-hero-tag');
     if (tag) tag.textContent = `${pct}% Kehadiran`;
 
-    const points = range === '1H' ? [90,92,91,95,94,98]
-                 : range === '24H' ? [82,85,89,91,93,95,92,96,98]
-                 : range === '1W' ? [84,86,88,91,89,94,93,97,95,98,99]
-                 : range === '1M' ? [80,82,85,84,87,89,92,90,94,95,98,100]
-                 : [78,82,85,88,90,92,94,96,98,100];
-    const labels = points.map((_, i) => `${i+1}`);
+    const points = range === '1H' ? [90, 92, 91, 95, 94, 98]
+      : range === '24H' ? [82, 85, 89, 91, 93, 95, 92, 96, 98]
+        : range === '1W' ? [84, 86, 88, 91, 89, 94, 93, 97, 95, 98, 99]
+          : range === '1M' ? [80, 82, 85, 84, 87, 89, 92, 90, 94, 95, 98, 100]
+            : [78, 82, 85, 88, 90, 92, 94, 96, 98, 100];
+    const labels = points.map((_, i) => `${i + 1}`);
 
     ctx._ch = new Chart(ctx, {
       type: 'line',
@@ -347,7 +347,7 @@ function renderHeroSparkline(range = '1W') {
           fill: true,
           backgroundColor: (context) => {
             const chart = context.chart;
-            const {ctx, chartArea} = chart;
+            const { ctx, chartArea } = chart;
             if (!chartArea) return 'rgba(56,189,248,0.18)';
             const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
             gradient.addColorStop(0, 'rgba(56, 189, 248, 0.32)');
@@ -376,7 +376,7 @@ function renderHeroSparkline(range = '1W') {
         }
       }
     });
-  } catch(e) { console.warn(e); }
+  } catch (e) { console.warn(e); }
 }
 
 function setChartRange(btn, range) {
@@ -389,18 +389,18 @@ function renderDashAlerts(filterDays = 90) {
   const el = document.getElementById('d-alerts');
   if (!el) return;
   const maxD = Number(filterDays) || 90;
-  const exp = DB.staf.filter(s=>s.status==='Aktif'&&daysUntil(s.tglKontrakBerakhir)<=maxD)
-    .sort((a,b)=>daysUntil(a.tglKontrakBerakhir)-daysUntil(b.tglKontrakBerakhir));
+  const exp = DB.staf.filter(s => s.status === 'Aktif' && daysUntil(s.tglKontrakBerakhir) <= maxD)
+    .sort((a, b) => daysUntil(a.tglKontrakBerakhir) - daysUntil(b.tglKontrakBerakhir));
   if (!exp.length) {
-    el.innerHTML = emptyHtml('✅',`Tidak ada kontrak yang akan berakhir dalam ${maxD} hari`);
+    el.innerHTML = emptyHtml('✅', `Tidak ada kontrak yang akan berakhir dalam ${maxD} hari`);
     return;
   }
-  el.innerHTML = exp.slice(0, 5).map(s=>{
+  el.innerHTML = exp.slice(0, 5).map(s => {
     const d = daysUntil(s.tglKontrakBerakhir);
     const isUrgent = d <= 14;
     return `<div class="activity-item-row">
       <div style="display:flex;align-items:center;gap:12px;min-width:0">
-        <div class="air-icon" style="background:${isUrgent?'#fee2e2':'#fef3c7'};color:${isUrgent?'#dc2626':'#d97706'}">
+        <div class="air-icon" style="background:${isUrgent ? '#fee2e2' : '#fef3c7'};color:${isUrgent ? '#dc2626' : '#d97706'}">
           ${isUrgent ? '⚠️' : '📄'}
         </div>
         <div style="min-width:0">
@@ -409,7 +409,7 @@ function renderDashAlerts(filterDays = 90) {
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
-        <span class="badge ${isUrgent?'br':'by'}">Sisa ${d} Hari</span>
+        <span class="badge ${isUrgent ? 'br' : 'by'}">Sisa ${d} Hari</span>
         <button class="btn btn-xs btn-primary" onclick="openPerpanjang('${s.id}')">Perpanjang</button>
       </div>
     </div>`;
@@ -424,12 +424,12 @@ function filterDashAlerts(val) {
 function renderDashJabatan() {
   const el = document.getElementById('d-jabatan');
   if (!el) return;
-  const aktif = DB.staf.filter(s=>s.status==='Aktif');
+  const aktif = DB.staf.filter(s => s.status === 'Aktif');
   const jab = {};
-  aktif.forEach(s=>{ jab[s.jabatan]=(jab[s.jabatan]||0)+1; });
-  if (!Object.keys(jab).length) { el.innerHTML = emptyHtml('📋','Belum ada data staf'); return; }
-  el.innerHTML = Object.entries(jab).map(([j,c])=>{
-    const pct=aktif.length?Math.round(c/aktif.length*100):0;
+  aktif.forEach(s => { jab[s.jabatan] = (jab[s.jabatan] || 0) + 1; });
+  if (!Object.keys(jab).length) { el.innerHTML = emptyHtml('📋', 'Belum ada data staf'); return; }
+  el.innerHTML = Object.entries(jab).map(([j, c]) => {
+    const pct = aktif.length ? Math.round(c / aktif.length * 100) : 0;
     return `<div style="margin-bottom:10px">
       <div class="flex justify-between items-center mb-1">
         <span class="text-sm font-semi">${esc(j)}</span>
@@ -443,7 +443,7 @@ function renderDashJabatan() {
 // ============================================================
 //  STAF MODULE
 // ============================================================
-let _stafFilters = { q:'', jabatan:'', status:'', tipe:'' };
+let _stafFilters = { q: '', jabatan: '', status: '', tipe: '' };
 let _editingStafId = null;
 
 function toggleKontrakField(tipe) {
@@ -469,40 +469,40 @@ function renderStaf() {
 }
 
 function renderStafStats() {
-  const aktif = DB.staf.filter(s=>s.status==='Aktif').length;
-  set('ss-total',DB.staf.length);
-  set('ss-aktif',aktif);
-  set('ss-nonaktif',DB.staf.filter(s=>s.status==='Nonaktif').length);
-  set('ss-jab',[...new Set(DB.staf.map(s=>s.jabatan))].length);
+  const aktif = DB.staf.filter(s => s.status === 'Aktif').length;
+  set('ss-total', DB.staf.length);
+  set('ss-aktif', aktif);
+  set('ss-nonaktif', DB.staf.filter(s => s.status === 'Nonaktif').length);
+  set('ss-jab', [...new Set(DB.staf.map(s => s.jabatan))].length);
 }
 
 function renderStafTable() {
   const tbody = document.getElementById('staf-tbody');
   let data = [...DB.staf];
   if (_stafFilters.q) {
-    const q=_stafFilters.q.toLowerCase();
-    data=data.filter(s=>s.nama.toLowerCase().includes(q)||s.id.toLowerCase().includes(q)||(s.nik||'').includes(q));
+    const q = _stafFilters.q.toLowerCase();
+    data = data.filter(s => s.nama.toLowerCase().includes(q) || s.id.toLowerCase().includes(q) || (s.nik || '').includes(q));
   }
-  if (_stafFilters.jabatan) data=data.filter(s=>s.jabatan===_stafFilters.jabatan);
-  if (_stafFilters.status) data=data.filter(s=>s.status===_stafFilters.status);
-  if (_stafFilters.tipe) data=data.filter(s=>(s.tipePegawai || 'Kontrak')===_stafFilters.tipe);
+  if (_stafFilters.jabatan) data = data.filter(s => s.jabatan === _stafFilters.jabatan);
+  if (_stafFilters.status) data = data.filter(s => s.status === _stafFilters.status);
+  if (_stafFilters.tipe) data = data.filter(s => (s.tipePegawai || 'Kontrak') === _stafFilters.tipe);
 
   if (!data.length) {
-    tbody.innerHTML = `<tr><td colspan="10">${emptyHtml(!DB.staf.length?'👥':'🔍',!DB.staf.length?'Belum ada staf. Klik tombol "+ Tambah Staf" untuk memulai.':'Tidak ada hasil yang cocok.')}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10">${emptyHtml(!DB.staf.length ? '👥' : '🔍', !DB.staf.length ? 'Belum ada staf. Klik tombol "+ Tambah Staf" untuk memulai.' : 'Tidak ada hasil yang cocok.')}</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = data.map(s=>{
+  tbody.innerHTML = data.map(s => {
     const tipe = s.tipePegawai || 'Kontrak';
     const days = daysUntil(s.tglKontrakBerakhir);
     let kb;
-    if (s.status==='Nonaktif') kb=`<span class="badge bgr">Nonaktif</span>`;
-    else if (tipe === 'Non-Kontrak') kb=`<span class="badge bg">Tetap</span>`;
-    else if (tipe === 'Relawan') kb=`<span class="badge bp">Relawan</span>`;
-    else if (days<0) kb=`<span class="badge br">Berakhir</span>`;
-    else if (days<=30) kb=`<span class="badge br">≤30 hari</span>`;
-    else if (days<=90) kb=`<span class="badge by">≤90 hari</span>`;
-    else kb=`<span class="badge bg">Aktif</span>`;
+    if (s.status === 'Nonaktif') kb = `<span class="badge bgr">Nonaktif</span>`;
+    else if (tipe === 'Non-Kontrak') kb = `<span class="badge bg">Tetap</span>`;
+    else if (tipe === 'Relawan') kb = `<span class="badge bp">Relawan</span>`;
+    else if (days < 0) kb = `<span class="badge br">Berakhir</span>`;
+    else if (days <= 30) kb = `<span class="badge br">≤30 hari</span>`;
+    else if (days <= 90) kb = `<span class="badge by">≤90 hari</span>`;
+    else kb = `<span class="badge bg">Aktif</span>`;
 
     let tipeBadge = `<span class="badge by">${tipe}</span>`;
     if (tipe === 'Non-Kontrak') tipeBadge = `<span class="badge bg">${tipe}</span>`;
@@ -515,17 +515,17 @@ function renderStafTable() {
           <div class="avatar" style="background:${avatarColor(s.nama)}">${s.nama.charAt(0)}</div>
           <div>
             <div class="td-name">${esc(s.nama)}</div>
-            <div class="text-xs text-muted">${s.nik||'-'}</div>
+            <div class="text-xs text-muted">${s.nik || '-'}</div>
           </div>
         </div>
       </td>
       <td>${esc(s.jabatan)}</td>
       <td>${tipeBadge}</td>
-      <td>${s.pendidikan||'-'}</td>
+      <td>${s.pendidikan || '-'}</td>
       <td>${fmtShort(s.tglMasuk)}</td>
-      <td>${tipe==='Kontrak' ? fmtShort(s.tglKontrakBerakhir) : '<span class="text-muted">—</span>'}</td>
+      <td>${tipe === 'Kontrak' ? fmtShort(s.tglKontrakBerakhir) : '<span class="text-muted">—</span>'}</td>
       <td>${kb}</td>
-      <td><span class="badge ${s.status==='Aktif'?'bg':'br'}">${s.status}</span></td>
+      <td><span class="badge ${s.status === 'Aktif' ? 'bg' : 'br'}">${s.status}</span></td>
       <td>
         <div class="flex gap-1">
           <button class="btn btn-icon btn-ghost btn-xs" onclick="viewStaf('${s.id}')" title="Detail">👁️</button>
@@ -537,15 +537,15 @@ function renderStafTable() {
   }).join('');
 }
 
-function openStafModal(id=null) {
+function openStafModal(id = null) {
   _editingStafId = id;
   const f = document.getElementById('f-staf');
   f.reset();
   document.getElementById('staf-modal-title').textContent = id ? '✏️ Edit Data Staf' : '➕ Tambah Staf Baru';
   if (id) {
-    const s = DB.staf.find(x=>x.id===id);
+    const s = DB.staf.find(x => x.id === id);
     if (!s) return;
-    Object.keys(s).forEach(k => { const el=f.querySelector(`[name="${k}"]`); if(el) el.value=s[k]; });
+    Object.keys(s).forEach(k => { const el = f.querySelector(`[name="${k}"]`); if (el) el.value = s[k]; });
     toggleKontrakField(s.tipePegawai || 'Kontrak');
   } else {
     f.querySelector('[name=status]').value = 'Aktif';
@@ -566,16 +566,16 @@ function saveStaf() {
     tempatLahir: v('tempatLahir'), tglLahir: v('tglLahir'),
     jenisKelamin: v('jenisKelamin'), agama: v('agama'),
     pendidikan: v('pendidikan'), noKK: v('noKK'),
-    tglMasuk: v('tglMasuk'), tglKontrakBerakhir: tipePegawai==='Kontrak' ? v('tglKontrakBerakhir') : '',
-    gaji: parseInt(v('gaji'))||0, telp: v('telp'),
+    tglMasuk: v('tglMasuk'), tglKontrakBerakhir: tipePegawai === 'Kontrak' ? v('tglKontrakBerakhir') : '',
+    gaji: parseInt(v('gaji')) || 0, telp: v('telp'),
     alamat: v('alamat'), status: v('status'), catatan: v('catatan'),
   };
-  if (!data.nama||!data.jabatan||!data.tglMasuk||(tipePegawai==='Kontrak' && !data.tglKontrakBerakhir)) {
-    toast('Lengkapi field yang wajib diisi (*)','err'); return;
+  if (!data.nama || !data.jabatan || !data.tglMasuk || (tipePegawai === 'Kontrak' && !data.tglKontrakBerakhir)) {
+    toast('Lengkapi field yang wajib diisi (*)', 'err'); return;
   }
   if (_editingStafId) {
-    const idx = DB.staf.findIndex(s=>s.id===_editingStafId);
-    if (idx!==-1) DB.staf[idx] = { ...DB.staf[idx], ...data };
+    const idx = DB.staf.findIndex(s => s.id === _editingStafId);
+    if (idx !== -1) DB.staf[idx] = { ...DB.staf[idx], ...data };
     toast('Data staf berhasil diperbarui ✅');
   } else {
     data.id = nextId('STF');
@@ -583,34 +583,34 @@ function saveStaf() {
     toast('Staf baru berhasil ditambahkan ✅');
   }
   saveDB(); closeModal('modal-staf'); renderStaf();
-  if (_page==='dashboard') renderDash();
+  if (_page === 'dashboard') renderDash();
 }
 
 function deleteStaf(id) {
-  const s = DB.staf.find(x=>x.id===id);
+  const s = DB.staf.find(x => x.id === id);
   if (!s) return;
   if (!confirm(`Hapus data staf "${s.nama}"?\n\nData absensi terkait juga akan ikut terhapus.`)) return;
-  DB.staf = DB.staf.filter(x=>x.id!==id);
-  DB.absensi = DB.absensi.filter(a=>a.stafId!==id);
-  saveDB(); toast('Data staf dihapus','warn'); renderStaf();
+  DB.staf = DB.staf.filter(x => x.id !== id);
+  DB.absensi = DB.absensi.filter(a => a.stafId !== id);
+  saveDB(); toast('Data staf dihapus', 'warn'); renderStaf();
 }
 
 function viewStaf(id) {
-  const s = DB.staf.find(x=>x.id===id);
+  const s = DB.staf.find(x => x.id === id);
   if (!s) return;
   const days = daysUntil(s.tglKontrakBerakhir);
   const ym = curYM();
-  const recs = DB.absensi.filter(a=>a.stafId===id&&a.tanggal.startsWith(ym));
-  const hadir = recs.filter(a=>a.status==='Hadir').length;
-  const terlambat = recs.filter(a=>a.status==='Terlambat').length;
-  const izin = recs.filter(a=>a.status==='Izin').length;
-  const sakit = recs.filter(a=>a.status==='Sakit').length;
+  const recs = DB.absensi.filter(a => a.stafId === id && a.tanggal.startsWith(ym));
+  const hadir = recs.filter(a => a.status === 'Hadir').length;
+  const terlambat = recs.filter(a => a.status === 'Terlambat').length;
+  const izin = recs.filter(a => a.status === 'Izin').length;
+  const sakit = recs.filter(a => a.status === 'Sakit').length;
   document.getElementById('staf-detail-body').innerHTML = `
     <div style="text-align:center;padding:16px 0 20px">
       <div class="avatar avatar-lg" style="background:${avatarColor(s.nama)};margin:0 auto 10px">${s.nama.charAt(0)}</div>
       <div style="font-size:1rem;font-weight:700">${esc(s.nama)}</div>
       <div class="text-xs text-muted">${esc(s.jabatan)} · ${s.id}</div>
-      <span class="badge ${s.status==='Aktif'?'bg':'br'}" style="margin-top:6px">${s.status}</span>
+      <span class="badge ${s.status === 'Aktif' ? 'bg' : 'br'}" style="margin-top:6px">${s.status}</span>
     </div>
     <div class="tabs mb-3" id="detail-tabs">
       <div class="tab active" onclick="switchDetailTab('info')">📋 Info</div>
@@ -619,31 +619,31 @@ function viewStaf(id) {
     </div>
     <div id="dt-info" class="tab-panel active">
       <div class="form-grid">
-        ${infoRow('🪪 NIK',s.nik||'-')}
-        ${infoRow('💼 Tipe Kerja',`<span class="badge ${s.tipePegawai==='Non-Kontrak'?'bg':s.tipePegawai==='Relawan'?'bp':'by'}">${s.tipePegawai||'Kontrak'}</span>`)}
-        ${infoRow('🚻 Jenis Kelamin',s.jenisKelamin||'-')}
-        ${infoRow('🗓️ Tgl Lahir',s.tglLahir?`${s.tempatLahir||''}, ${fmt(s.tglLahir)}`:'-')}
-        ${infoRow('🕌 Agama',s.agama||'-')}
-        ${infoRow('📚 Pendidikan',s.pendidikan||'-')}
-        ${infoRow('📞 Telepon',s.telp||'-')}
-        ${infoRow('🏠 Alamat',s.alamat||'-')}
-        ${infoRow('💰 Gaji',fmtCur(s.gaji))}
+        ${infoRow('🪪 NIK', s.nik || '-')}
+        ${infoRow('💼 Tipe Kerja', `<span class="badge ${s.tipePegawai === 'Non-Kontrak' ? 'bg' : s.tipePegawai === 'Relawan' ? 'bp' : 'by'}">${s.tipePegawai || 'Kontrak'}</span>`)}
+        ${infoRow('🚻 Jenis Kelamin', s.jenisKelamin || '-')}
+        ${infoRow('🗓️ Tgl Lahir', s.tglLahir ? `${s.tempatLahir || ''}, ${fmt(s.tglLahir)}` : '-')}
+        ${infoRow('🕌 Agama', s.agama || '-')}
+        ${infoRow('📚 Pendidikan', s.pendidikan || '-')}
+        ${infoRow('📞 Telepon', s.telp || '-')}
+        ${infoRow('🏠 Alamat', s.alamat || '-')}
+        ${infoRow('💰 Gaji', fmtCur(s.gaji))}
       </div>
     </div>
     <div id="dt-kontrak" class="tab-panel">
       <div class="form-grid">
-        ${infoRow('💼 Tipe Kepegawaian',s.tipePegawai||'Kontrak')}
-        ${infoRow('📅 Tanggal Masuk',fmt(s.tglMasuk))}
-        ${s.tipePegawai==='Non-Kontrak'
-          ? infoRow('📋 Status Kontrak', '<span class="text-green font-bold">Pegawai Tetap (Tanpa Batas Kontrak)</span>')
-          : s.tipePegawai==='Relawan'
-            ? infoRow('📋 Status Relawan', '<span class="text-purple font-bold">Relawan / Volunteer MBG</span>')
-            : infoRow('📋 Kontrak Berakhir',fmt(s.tglKontrakBerakhir))}
-        ${(s.tipePegawai||'Kontrak')==='Kontrak' ? infoRow('⏳ Sisa Kontrak', days<0?`<span class="text-red font-bold">Sudah berakhir ${Math.abs(days)} hari lalu</span>`:days<=30?`<span class="text-red font-bold">${days} hari lagi</span>`:days<=90?`<span class="text-yellow font-bold">${days} hari lagi</span>`:`<span class="text-green">${days} hari lagi</span>`) : ''}
-        ${infoRow('📝 Catatan',s.catatan||'-')}
+        ${infoRow('💼 Tipe Kepegawaian', s.tipePegawai || 'Kontrak')}
+        ${infoRow('📅 Tanggal Masuk', fmt(s.tglMasuk))}
+        ${s.tipePegawai === 'Non-Kontrak'
+      ? infoRow('📋 Status Kontrak', '<span class="text-green font-bold">Pegawai Tetap (Tanpa Batas Kontrak)</span>')
+      : s.tipePegawai === 'Relawan'
+        ? infoRow('📋 Status Relawan', '<span class="text-purple font-bold">Relawan / Volunteer MBG</span>')
+        : infoRow('📋 Kontrak Berakhir', fmt(s.tglKontrakBerakhir))}
+        ${(s.tipePegawai || 'Kontrak') === 'Kontrak' ? infoRow('⏳ Sisa Kontrak', days < 0 ? `<span class="text-red font-bold">Sudah berakhir ${Math.abs(days)} hari lalu</span>` : days <= 30 ? `<span class="text-red font-bold">${days} hari lagi</span>` : days <= 90 ? `<span class="text-yellow font-bold">${days} hari lagi</span>` : `<span class="text-green">${days} hari lagi</span>`) : ''}
+        ${infoRow('📝 Catatan', s.catatan || '-')}
       </div>
       <div class="mt-3 flex gap-2">
-        ${(s.tipePegawai||'Kontrak')==='Kontrak' ? `<button class="btn btn-primary btn-sm" onclick="closeModal('modal-detail');openPerpanjang('${id}')">🔄 Perpanjang Kontrak</button>` : ''}
+        ${(s.tipePegawai || 'Kontrak') === 'Kontrak' ? `<button class="btn btn-primary btn-sm" onclick="closeModal('modal-detail');openPerpanjang('${id}')">🔄 Perpanjang Kontrak</button>` : ''}
         <button class="btn btn-ghost btn-sm" onclick="cetakSurat('${id}')">🖨️ Cetak Surat</button>
       </div>
     </div>
@@ -660,12 +660,12 @@ function viewStaf(id) {
 }
 
 function switchDetailTab(tab) {
-  document.querySelectorAll('#detail-tabs .tab').forEach((el,i)=>{
-    const tabs = ['info','kontrak','absensi'];
-    el.classList.toggle('active', tabs[i]===tab);
+  document.querySelectorAll('#detail-tabs .tab').forEach((el, i) => {
+    const tabs = ['info', 'kontrak', 'absensi'];
+    el.classList.toggle('active', tabs[i] === tab);
   });
-  document.querySelectorAll('#staf-detail-body .tab-panel').forEach(p=>{
-    p.classList.toggle('active', p.id==='dt-'+tab);
+  document.querySelectorAll('#staf-detail-body .tab-panel').forEach(p => {
+    p.classList.toggle('active', p.id === 'dt-' + tab);
   });
 }
 
@@ -699,26 +699,26 @@ let _absDate = todayStr();
 
 function renderAbsensi() {
   document.getElementById('abs-date').value = _absDate;
-  document.getElementById('abs-day-label').textContent = new Date(_absDate+'T00:00:00').toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('abs-day-label').textContent = new Date(_absDate + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   renderAbsensiTable();
 }
 
 function renderAbsensiTable() {
-  const aktif = DB.staf.filter(s=>s.status==='Aktif');
+  const aktif = DB.staf.filter(s => s.status === 'Aktif');
   const ex = {};
-  DB.absensi.filter(a=>a.tanggal===_absDate).forEach(a=>{ ex[a.stafId]=a; });
+  DB.absensi.filter(a => a.tanggal === _absDate).forEach(a => { ex[a.stafId] = a; });
 
-  let h=0,t=0,i=0,sk=0,al=0,bl=0;
-  document.getElementById('abs-tbody').innerHTML = aktif.map(s=>{
+  let h = 0, t = 0, i = 0, sk = 0, al = 0, bl = 0;
+  document.getElementById('abs-tbody').innerHTML = aktif.map(s => {
     const r = ex[s.id];
-    const st = r?.status||'';
-    if (st==='Hadir') h++;
-    else if (st==='Terlambat') t++;
-    else if (st==='Izin') i++;
-    else if (st==='Sakit') sk++;
-    else if (st==='Alpha') al++;
+    const st = r?.status || '';
+    if (st === 'Hadir') h++;
+    else if (st === 'Terlambat') t++;
+    else if (st === 'Izin') i++;
+    else if (st === 'Sakit') sk++;
+    else if (st === 'Alpha') al++;
     else bl++;
-    const disabled = !st||st==='Izin'||st==='Sakit'||st==='Alpha';
+    const disabled = !st || st === 'Izin' || st === 'Sakit' || st === 'Alpha';
     const fotoHtml = r?.foto
       ? `<img src="${r.foto}" alt="Foto ${esc(s.nama)}" style="width:34px;height:34px;border-radius:8px;object-fit:cover;cursor:pointer;border:1px solid #cbd5e1;" onclick="previewFotoModal('${r.foto}','${esc(s.nama)}')" title="Lihat foto wajah">`
       : `<span style="font-size:.75rem;color:var(--text-subtle);">-</span>`;
@@ -735,32 +735,32 @@ function renderAbsensiTable() {
       <td class="text-sm text-muted">${esc(s.jabatan)}</td>
       <td>
         <select class="fselect" style="font-size:.78rem;padding:4px 8px" onchange="setAbs('${s.id}','status',this.value)">
-          <option value="" ${!st?'selected':''}>— Belum —</option>
-          ${STATUS_ABS.map(x=>`<option value="${x}" ${st===x?'selected':''}>${x}</option>`).join('')}
+          <option value="" ${!st ? 'selected' : ''}>— Belum —</option>
+          ${STATUS_ABS.map(x => `<option value="${x}" ${st === x ? 'selected' : ''}>${x}</option>`).join('')}
         </select>
       </td>
-      <td><input type="time" class="ctrl" style="width:106px;padding:4px 8px;font-size:.78rem" value="${cleanJamMasuk}" onchange="setAbs('${s.id}','jamMasuk',this.value)" ${disabled?'disabled':''}></td>
-      <td><input type="time" class="ctrl" style="width:106px;padding:4px 8px;font-size:.78rem" value="${r?.jamKeluar||''}" onchange="setAbs('${s.id}','jamKeluar',this.value)" ${disabled?'disabled':''}></td>
+      <td><input type="time" class="ctrl" style="width:106px;padding:4px 8px;font-size:.78rem" value="${cleanJamMasuk}" onchange="setAbs('${s.id}','jamMasuk',this.value)" ${disabled ? 'disabled' : ''}></td>
+      <td><input type="time" class="ctrl" style="width:106px;padding:4px 8px;font-size:.78rem" value="${r?.jamKeluar || ''}" onchange="setAbs('${s.id}','jamKeluar',this.value)" ${disabled ? 'disabled' : ''}></td>
       <td class="text-center">${fotoHtml}</td>
-      <td><input type="text" class="ctrl" style="font-size:.78rem;padding:4px 8px" placeholder="Keterangan..." value="${esc(r?.keterangan||'')}" onchange="setAbs('${s.id}','keterangan',this.value)"></td>
+      <td><input type="text" class="ctrl" style="font-size:.78rem;padding:4px 8px" placeholder="Keterangan..." value="${esc(r?.keterangan || '')}" onchange="setAbs('${s.id}','keterangan',this.value)"></td>
     </tr>`;
   }).join('');
 
   if (!aktif.length) {
-    document.getElementById('abs-tbody').innerHTML = `<tr><td colspan="8">${emptyHtml('👥','Belum ada staf aktif. Tambahkan staf terlebih dahulu.')}</td></tr>`;
+    document.getElementById('abs-tbody').innerHTML = `<tr><td colspan="8">${emptyHtml('👥', 'Belum ada staf aktif. Tambahkan staf terlebih dahulu.')}</td></tr>`;
   }
 
-  set('abs-h',h); set('abs-t',t); set('abs-i',i); set('abs-sk',sk); set('abs-al',al); set('abs-bl',bl);
+  set('abs-h', h); set('abs-t', t); set('abs-i', i); set('abs-sk', sk); set('abs-al', al); set('abs-bl', bl);
 }
 
 function setAbs(stafId, field, value) {
   const id = `${stafId}|${_absDate}`;
-  let r = DB.absensi.find(a=>a.id===id);
-  if (!r) { r={id,stafId,tanggal:_absDate,status:'',jamMasuk:'',jamKeluar:'',keterangan:''}; DB.absensi.push(r); }
+  let r = DB.absensi.find(a => a.id === id);
+  if (!r) { r = { id, stafId, tanggal: _absDate, status: '', jamMasuk: '', jamKeluar: '', keterangan: '' }; DB.absensi.push(r); }
   r[field] = value;
-  if (field==='status' && (value==='Izin'||value==='Sakit'||value==='Alpha'||value==='')) { r.jamMasuk=''; r.jamKeluar=''; }
+  if (field === 'status' && (value === 'Izin' || value === 'Sakit' || value === 'Alpha' || value === '')) { r.jamMasuk = ''; r.jamKeluar = ''; }
   saveDB();
-  if (field==='status') renderAbsensiTable();
+  if (field === 'status') renderAbsensiTable();
 }
 
 function previewFotoModal(imgSrc, nama) {
@@ -829,30 +829,30 @@ function renderRekap() {
 }
 
 function renderRekapTable() {
-  const aktif = DB.staf.filter(s=>s.status==='Aktif');
-  const recs = DB.absensi.filter(a=>a.tanggal.startsWith(_rekapYM));
+  const aktif = DB.staf.filter(s => s.status === 'Aktif');
+  const recs = DB.absensi.filter(a => a.tanggal.startsWith(_rekapYM));
   const wd = workDaysInMonth(_rekapYM);
 
   if (!aktif.length) {
-    document.getElementById('rekap-tbody').innerHTML = `<tr><td colspan="10">${emptyHtml('👥','Belum ada staf aktif')}</td></tr>`;
-    document.getElementById('rekap-tfoot').innerHTML='';
+    document.getElementById('rekap-tbody').innerHTML = `<tr><td colspan="10">${emptyHtml('👥', 'Belum ada staf aktif')}</td></tr>`;
+    document.getElementById('rekap-tfoot').innerHTML = '';
     return;
   }
 
-  let totH=0,totT=0,totI=0,totSk=0,totAl=0;
-  document.getElementById('rekap-tbody').innerHTML = aktif.map(s=>{
-    const sr = recs.filter(a=>a.stafId===s.id);
-    const h=sr.filter(a=>a.status==='Hadir').length;
-    const t=sr.filter(a=>a.status==='Terlambat').length;
-    const iz=sr.filter(a=>a.status==='Izin').length;
-    const sk=sr.filter(a=>a.status==='Sakit').length;
-    const al=sr.filter(a=>a.status==='Alpha').length;
-    const eff=h+t;
-    const pct=wd?Math.round(eff/wd*100):0;
-    totH+=h;totT+=t;totI+=iz;totSk+=sk;totAl+=al;
-    const pc=pct>=90?'pf-green':pct>=75?'pf-yellow':'pf-red';
-    const bc=pct>=90?'bg':pct>=75?'by':'br';
-    const kinerja=pct>=90?'Baik':pct>=75?'Cukup':'Kurang';
+  let totH = 0, totT = 0, totI = 0, totSk = 0, totAl = 0;
+  document.getElementById('rekap-tbody').innerHTML = aktif.map(s => {
+    const sr = recs.filter(a => a.stafId === s.id);
+    const h = sr.filter(a => a.status === 'Hadir').length;
+    const t = sr.filter(a => a.status === 'Terlambat').length;
+    const iz = sr.filter(a => a.status === 'Izin').length;
+    const sk = sr.filter(a => a.status === 'Sakit').length;
+    const al = sr.filter(a => a.status === 'Alpha').length;
+    const eff = h + t;
+    const pct = wd ? Math.round(eff / wd * 100) : 0;
+    totH += h; totT += t; totI += iz; totSk += sk; totAl += al;
+    const pc = pct >= 90 ? 'pf-green' : pct >= 75 ? 'pf-yellow' : 'pf-red';
+    const bc = pct >= 90 ? 'bg' : pct >= 75 ? 'by' : 'br';
+    const kinerja = pct >= 90 ? 'Baik' : pct >= 75 ? 'Cukup' : 'Kurang';
     return `<tr>
       <td><span class="td-id">${s.id}</span></td>
       <td><span class="td-name">${esc(s.nama)}</span></td>
@@ -885,23 +885,24 @@ function renderRekapChart() {
   if (!ctx || typeof Chart === 'undefined') return;
   try {
     if (ctx._ch) ctx._ch.destroy();
-    const aktif = DB.staf.filter(s=>s.status==='Aktif');
-    const recs = DB.absensi.filter(a=>a.tanggal.startsWith(_rekapYM));
+    const aktif = DB.staf.filter(s => s.status === 'Aktif');
+    const recs = DB.absensi.filter(a => a.tanggal.startsWith(_rekapYM));
     if (!aktif.length) return;
     ctx._ch = new Chart(ctx, {
-      type:'bar',
-      data:{
-        labels: aktif.map(s=>s.nama.split(' ')[0]),
-        datasets:[
-          {label:'Hadir',data:aktif.map(s=>recs.filter(a=>a.stafId===s.id&&a.status==='Hadir').length),backgroundColor:'#16a34a',borderRadius:4},
-          {label:'Terlambat',data:aktif.map(s=>recs.filter(a=>a.stafId===s.id&&a.status==='Terlambat').length),backgroundColor:'#d97706',borderRadius:4},
-          {label:'Izin',data:aktif.map(s=>recs.filter(a=>a.stafId===s.id&&a.status==='Izin').length),backgroundColor:'#7c3aed',borderRadius:4},
-          {label:'Sakit',data:aktif.map(s=>recs.filter(a=>a.stafId===s.id&&a.status==='Sakit').length),backgroundColor:'#dc2626',borderRadius:4},
+      type: 'bar',
+      data: {
+        labels: aktif.map(s => s.nama.split(' ')[0]),
+        datasets: [
+          { label: 'Hadir', data: aktif.map(s => recs.filter(a => a.stafId === s.id && a.status === 'Hadir').length), backgroundColor: '#16a34a', borderRadius: 4 },
+          { label: 'Terlambat', data: aktif.map(s => recs.filter(a => a.stafId === s.id && a.status === 'Terlambat').length), backgroundColor: '#d97706', borderRadius: 4 },
+          { label: 'Izin', data: aktif.map(s => recs.filter(a => a.stafId === s.id && a.status === 'Izin').length), backgroundColor: '#7c3aed', borderRadius: 4 },
+          { label: 'Sakit', data: aktif.map(s => recs.filter(a => a.stafId === s.id && a.status === 'Sakit').length), backgroundColor: '#dc2626', borderRadius: 4 },
         ]
       },
-      options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12}}},
-        scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,beginAtZero:true,ticks:{stepSize:1}}}
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top', labels: { font: { size: 11 }, boxWidth: 12 } } },
+        scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } } }
       }
     });
   } catch (e) { console.warn(e); }
@@ -959,42 +960,42 @@ function renderKontrak() {
 }
 
 function renderKontrakStats() {
-  const aktifKontrak = DB.staf.filter(s=>s.status==='Aktif' && (s.tipePegawai||'Kontrak')==='Kontrak');
-  set('ks-7', aktifKontrak.filter(s=>daysUntil(s.tglKontrakBerakhir)<=7&&daysUntil(s.tglKontrakBerakhir)>=0).length);
-  set('ks-30', aktifKontrak.filter(s=>daysUntil(s.tglKontrakBerakhir)<=30&&daysUntil(s.tglKontrakBerakhir)>=0).length);
-  set('ks-90', aktifKontrak.filter(s=>daysUntil(s.tglKontrakBerakhir)<=90&&daysUntil(s.tglKontrakBerakhir)>=0).length);
-  set('ks-exp', aktifKontrak.filter(s=>daysUntil(s.tglKontrakBerakhir)<0).length);
+  const aktifKontrak = DB.staf.filter(s => s.status === 'Aktif' && (s.tipePegawai || 'Kontrak') === 'Kontrak');
+  set('ks-7', aktifKontrak.filter(s => daysUntil(s.tglKontrakBerakhir) <= 7 && daysUntil(s.tglKontrakBerakhir) >= 0).length);
+  set('ks-30', aktifKontrak.filter(s => daysUntil(s.tglKontrakBerakhir) <= 30 && daysUntil(s.tglKontrakBerakhir) >= 0).length);
+  set('ks-90', aktifKontrak.filter(s => daysUntil(s.tglKontrakBerakhir) <= 90 && daysUntil(s.tglKontrakBerakhir) >= 0).length);
+  set('ks-exp', aktifKontrak.filter(s => daysUntil(s.tglKontrakBerakhir) < 0).length);
 }
 
 function renderKontrakTable() {
-  const filter = document.getElementById('kf-select')?.value||'all';
-  const tipeFilter = document.getElementById('kf-tipe')?.value||'';
+  const filter = document.getElementById('kf-select')?.value || 'all';
+  const tipeFilter = document.getElementById('kf-tipe')?.value || '';
   let data = [...DB.staf];
-  if (filter==='7') data=data.filter(s=>s.status==='Aktif'&&daysUntil(s.tglKontrakBerakhir)<=7&&daysUntil(s.tglKontrakBerakhir)>=0);
-  else if (filter==='30') data=data.filter(s=>s.status==='Aktif'&&daysUntil(s.tglKontrakBerakhir)<=30&&daysUntil(s.tglKontrakBerakhir)>=0);
-  else if (filter==='90') data=data.filter(s=>s.status==='Aktif'&&daysUntil(s.tglKontrakBerakhir)<=90&&daysUntil(s.tglKontrakBerakhir)>=0);
-  else if (filter==='exp') data=data.filter(s=>daysUntil(s.tglKontrakBerakhir)<0);
-  else data=data.filter(s=>s.status==='Aktif');
+  if (filter === '7') data = data.filter(s => s.status === 'Aktif' && daysUntil(s.tglKontrakBerakhir) <= 7 && daysUntil(s.tglKontrakBerakhir) >= 0);
+  else if (filter === '30') data = data.filter(s => s.status === 'Aktif' && daysUntil(s.tglKontrakBerakhir) <= 30 && daysUntil(s.tglKontrakBerakhir) >= 0);
+  else if (filter === '90') data = data.filter(s => s.status === 'Aktif' && daysUntil(s.tglKontrakBerakhir) <= 90 && daysUntil(s.tglKontrakBerakhir) >= 0);
+  else if (filter === 'exp') data = data.filter(s => daysUntil(s.tglKontrakBerakhir) < 0);
+  else data = data.filter(s => s.status === 'Aktif');
 
-  if (tipeFilter) data=data.filter(s=>(s.tipePegawai||'Kontrak')===tipeFilter);
+  if (tipeFilter) data = data.filter(s => (s.tipePegawai || 'Kontrak') === tipeFilter);
 
-  data.sort((a,b)=>daysUntil(a.tglKontrakBerakhir)-daysUntil(b.tglKontrakBerakhir));
+  data.sort((a, b) => daysUntil(a.tglKontrakBerakhir) - daysUntil(b.tglKontrakBerakhir));
 
   const tbody = document.getElementById('kontrak-tbody');
   if (!data.length) {
-    tbody.innerHTML=`<tr><td colspan="8">${emptyHtml('✅','Tidak ada data pegawai dalam kategori ini')}</td></tr>`; return;
+    tbody.innerHTML = `<tr><td colspan="8">${emptyHtml('✅', 'Tidak ada data pegawai dalam kategori ini')}</td></tr>`; return;
   }
-  tbody.innerHTML = data.map(s=>{
+  tbody.innerHTML = data.map(s => {
     const tipe = s.tipePegawai || 'Kontrak';
-    const d=daysUntil(s.tglKontrakBerakhir);
+    const d = daysUntil(s.tglKontrakBerakhir);
     let badge;
-    if (tipe === 'Non-Kontrak') badge=`<span class="badge bg">Tetap</span>`;
-    else if (tipe === 'Relawan') badge=`<span class="badge bp">Relawan</span>`;
-    else if (d<0) badge=`<span class="badge br">Sudah Berakhir</span>`;
-    else if (d<=7) badge=`<span class="badge br">🚨 Kritis (${d} hari)</span>`;
-    else if (d<=30) badge=`<span class="badge br">⚠️ Mendesak (${d} hari)</span>`;
-    else if (d<=90) badge=`<span class="badge by">⏳ Perhatian (${d} hari)</span>`;
-    else badge=`<span class="badge bg">✅ Aman</span>`;
+    if (tipe === 'Non-Kontrak') badge = `<span class="badge bg">Tetap</span>`;
+    else if (tipe === 'Relawan') badge = `<span class="badge bp">Relawan</span>`;
+    else if (d < 0) badge = `<span class="badge br">Sudah Berakhir</span>`;
+    else if (d <= 7) badge = `<span class="badge br">🚨 Kritis (${d} hari)</span>`;
+    else if (d <= 30) badge = `<span class="badge br">⚠️ Mendesak (${d} hari)</span>`;
+    else if (d <= 90) badge = `<span class="badge by">⏳ Perhatian (${d} hari)</span>`;
+    else badge = `<span class="badge bg">✅ Aman</span>`;
 
     let tipeBadge = `<span class="badge by">${tipe}</span>`;
     if (tipe === 'Non-Kontrak') tipeBadge = `<span class="badge bg">${tipe}</span>`;
@@ -1015,7 +1016,7 @@ function renderKontrakTable() {
       <td class="text-sm">${esc(s.jabatan)}</td>
       <td>${tipeBadge}</td>
       <td class="text-sm">${fmtShort(s.tglMasuk)}</td>
-      <td class="text-sm">${tipe==='Kontrak' ? fmtShort(s.tglKontrakBerakhir) : '<span class="text-muted">—</span>'}</td>
+      <td class="text-sm">${tipe === 'Kontrak' ? fmtShort(s.tglKontrakBerakhir) : '<span class="text-muted">—</span>'}</td>
       <td>${badge}</td>
       <td>
         <div class="flex gap-1">
@@ -1032,31 +1033,37 @@ function renderKontrakChart() {
   if (!ctx || typeof Chart === 'undefined') return;
   try {
     if (ctx._ch) ctx._ch.destroy();
-    const aktif = DB.staf.filter(s=>s.status==='Aktif');
+    const aktif = DB.staf.filter(s => s.status === 'Aktif');
     if (!aktif.length) return;
-    const months={};
-    aktif.forEach(s=>{ const ym=s.tglKontrakBerakhir?.slice(0,7)||''; if(ym) months[ym]=(months[ym]||0)+1; });
-    const sorted=Object.entries(months).sort((a,b)=>a[0].localeCompare(b[0]));
-    ctx._ch = new Chart(ctx,{
-      type:'bar',
-      data:{labels:sorted.map(([k])=>ymLabel(k)),datasets:[{label:'Kontrak Berakhir',data:sorted.map(([,v])=>v),
-        backgroundColor:sorted.map(([k])=>daysUntil(k+'-01')<0?'#dc2626':daysUntil(k+'-01')<=90?'#d97706':'#16a34a'),borderRadius:4}]},
-      options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}}}
+    const months = {};
+    aktif.forEach(s => { const ym = s.tglKontrakBerakhir?.slice(0, 7) || ''; if (ym) months[ym] = (months[ym] || 0) + 1; });
+    const sorted = Object.entries(months).sort((a, b) => a[0].localeCompare(b[0]));
+    ctx._ch = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: sorted.map(([k]) => ymLabel(k)), datasets: [{
+          label: 'Kontrak Berakhir', data: sorted.map(([, v]) => v),
+          backgroundColor: sorted.map(([k]) => daysUntil(k + '-01') < 0 ? '#dc2626' : daysUntil(k + '-01') <= 90 ? '#d97706' : '#16a34a'), borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+      }
     });
   } catch (e) { console.warn(e); }
 }
 
 function openPerpanjang(id) {
   _perpanjangId = id;
-  const s = DB.staf.find(x=>x.id===id);
+  const s = DB.staf.find(x => x.id === id);
   if (!s) return;
   document.getElementById('pp-nama').value = s.nama;
   document.getElementById('pp-jabatan').value = s.jabatan;
   document.getElementById('pp-lama').value = s.tglKontrakBerakhir;
-  const newEnd = new Date((s.tglKontrakBerakhir||todayStr())+'T00:00:00');
-  newEnd.setFullYear(newEnd.getFullYear()+1);
-  document.getElementById('pp-baru').value = newEnd.toISOString().slice(0,10);
+  const newEnd = new Date((s.tglKontrakBerakhir || todayStr()) + 'T00:00:00');
+  newEnd.setFullYear(newEnd.getFullYear() + 1);
+  document.getElementById('pp-baru').value = newEnd.toISOString().slice(0, 10);
   document.getElementById('pp-catatan').value = '';
   document.getElementById('pp-durasi').value = '1 Tahun';
   openModal('modal-perpanjang');
@@ -1066,36 +1073,36 @@ function hitungDurasiPerpanjang() {
   const dur = document.getElementById('pp-durasi').value;
   const lama = document.getElementById('pp-lama').value;
   if (!lama) return;
-  const base = new Date(lama+'T00:00:00');
-  if (dur==='6 Bulan') base.setMonth(base.getMonth()+6);
-  else if (dur==='1 Tahun') base.setFullYear(base.getFullYear()+1);
-  else if (dur==='2 Tahun') base.setFullYear(base.getFullYear()+2);
-  else if (dur==='3 Tahun') base.setFullYear(base.getFullYear()+3);
-  document.getElementById('pp-baru').value = base.toISOString().slice(0,10);
+  const base = new Date(lama + 'T00:00:00');
+  if (dur === '6 Bulan') base.setMonth(base.getMonth() + 6);
+  else if (dur === '1 Tahun') base.setFullYear(base.getFullYear() + 1);
+  else if (dur === '2 Tahun') base.setFullYear(base.getFullYear() + 2);
+  else if (dur === '3 Tahun') base.setFullYear(base.getFullYear() + 3);
+  document.getElementById('pp-baru').value = base.toISOString().slice(0, 10);
 }
 
 function savePerpanjang() {
   const newDate = document.getElementById('pp-baru').value;
   const catatan = document.getElementById('pp-catatan').value;
-  if (!newDate) { toast('Masukkan tanggal kontrak baru','err'); return; }
-  const idx = DB.staf.findIndex(s=>s.id===_perpanjangId);
-  if (idx===-1) return;
+  if (!newDate) { toast('Masukkan tanggal kontrak baru', 'err'); return; }
+  const idx = DB.staf.findIndex(s => s.id === _perpanjangId);
+  if (idx === -1) return;
   const lama = DB.staf[idx].tglKontrakBerakhir;
   DB.staf[idx].tglKontrakBerakhir = newDate;
   DB.staf[idx].status = 'Aktif';
   DB.kontrak_history.push({
-    id: 'KH'+Date.now(), stafId: _perpanjangId, nama: DB.staf[idx].nama,
+    id: 'KH' + Date.now(), stafId: _perpanjangId, nama: DB.staf[idx].nama,
     jabatan: DB.staf[idx].jabatan, kontrakLama: lama, kontrakBaru: newDate,
     catatan, tanggal: todayStr()
   });
   saveDB(); closeModal('modal-perpanjang');
   toast(`Kontrak ${DB.staf[idx].nama} diperpanjang hingga ${fmtShort(newDate)} ✅`);
-  if (_page==='kontrak') renderKontrak();
-  if (_page==='dashboard') renderDash();
+  if (_page === 'kontrak') renderKontrak();
+  if (_page === 'dashboard') renderDash();
 }
 
 function cetakSurat(id) {
-  const s = DB.staf.find(x=>x.id===id);
+  const s = DB.staf.find(x => x.id === id);
   if (!s) return;
   const days = daysUntil(s.tglKontrakBerakhir);
   document.getElementById('cetak-body').innerHTML = `
@@ -1103,10 +1110,10 @@ function cetakSurat(id) {
       <div style="text-align:center;margin-bottom:20px;border-bottom:2px solid #000;padding-bottom:14px">
         <div style="font-size:1.2rem;font-weight:bold;text-transform:uppercase;letter-spacing:.05em">Surat Pemberitahuan</div>
         <div style="font-size:1rem;font-weight:bold">Masa Berlaku Kontrak Kerja</div>
-        <div style="font-size:.85rem">Program Makan Bergizi Gratis (MBG) — ${esc(DB.meta.sppgName||'SPPG MBG')}</div>
+        <div style="font-size:.85rem">Program Makan Bergizi Gratis (MBG) — ${esc(DB.meta.sppgName || 'SPPG MBG')}</div>
       </div>
       <table style="width:100%;font-size:.85rem;margin-bottom:14px">
-        <tr><td style="width:160px">Nomor Surat</td><td>: ${s.id}-${new Date().getFullYear()}/MBG/${String(new Date().getMonth()+1).padStart(2,'0')}</td></tr>
+        <tr><td style="width:160px">Nomor Surat</td><td>: ${s.id}-${new Date().getFullYear()}/MBG/${String(new Date().getMonth() + 1).padStart(2, '0')}</td></tr>
         <tr><td>Tanggal</td><td>: ${fmt(todayStr())}</td></tr>
         <tr><td>Perihal</td><td>: Pemberitahuan Masa Kontrak Kerja</td></tr>
       </table>
@@ -1114,14 +1121,14 @@ function cetakSurat(id) {
       <p style="margin-top:14px">Dengan hormat,</p>
       <p>Bersama surat ini kami sampaikan bahwa masa berlaku kontrak kerja Saudara/i tercatat sebagai berikut:</p>
       <table style="width:100%;font-size:.85rem;margin:14px 0;border:1px solid #ccc;border-collapse:collapse">
-        ${[['Nama Lengkap',s.nama],['NIK',s.nik||'-'],['Jabatan',s.jabatan],['Tanggal Masuk',fmt(s.tglMasuk)],['Kontrak Berakhir',fmt(s.tglKontrakBerakhir)],['Sisa Waktu',days<0?`Sudah berakhir ${Math.abs(days)} hari lalu`:days+' hari lagi']].map(([l,v])=>`<tr><td style="padding:7px 10px;border:1px solid #ccc;font-weight:bold;width:180px">${l}</td><td style="padding:7px 10px;border:1px solid #ccc">${esc(String(v))}</td></tr>`).join('')}
+        ${[['Nama Lengkap', s.nama], ['NIK', s.nik || '-'], ['Jabatan', s.jabatan], ['Tanggal Masuk', fmt(s.tglMasuk)], ['Kontrak Berakhir', fmt(s.tglKontrakBerakhir)], ['Sisa Waktu', days < 0 ? `Sudah berakhir ${Math.abs(days)} hari lalu` : days + ' hari lagi']].map(([l, v]) => `<tr><td style="padding:7px 10px;border:1px solid #ccc;font-weight:bold;width:180px">${l}</td><td style="padding:7px 10px;border:1px solid #ccc">${esc(String(v))}</td></tr>`).join('')}
       </table>
       <p>Sehubungan dengan hal tersebut, kami mohon kepada Saudara/i untuk segera menghubungi bagian administrasi guna membicarakan proses perpanjangan kontrak kerja sesuai dengan ketentuan yang berlaku.</p>
       <div style="margin-top:36px;text-align:right">
-        <p>${esc(DB.meta.sppgName||'SPPG MBG')}, ${fmt(todayStr())}</p>
+        <p>${esc(DB.meta.sppgName || 'SPPG MBG')}, ${fmt(todayStr())}</p>
         <br><br><br>
-        <p style="font-weight:bold;border-top:1px solid #000;display:inline-block;min-width:200px;padding-top:4px">${esc(DB.meta.adminName||'Admin MBG')}</p>
-        <p style="font-size:.8rem">${esc(DB.meta.adminRole||'Administrator')}</p>
+        <p style="font-weight:bold;border-top:1px solid #000;display:inline-block;min-width:200px;padding-top:4px">${esc(DB.meta.adminName || 'Admin MBG')}</p>
+        <p style="font-size:.8rem">${esc(DB.meta.adminRole || 'Administrator')}</p>
       </div>
     </div>`;
   openModal('modal-cetak');
@@ -1129,7 +1136,7 @@ function cetakSurat(id) {
 
 function printSurat() {
   const c = document.getElementById('cetak-body').innerHTML;
-  const w = window.open('','_blank');
+  const w = window.open('', '_blank');
   w.document.write(`<html><head><title>Surat Kontrak</title><style>body{padding:30px}@media print{button{display:none}}</style></head><body>${c}</body></html>`);
   w.document.close(); w.print();
 }
@@ -1144,17 +1151,17 @@ function renderLaporan() {
 }
 
 function renderSummaryLaporan() {
-  const aktif = DB.staf.filter(s=>s.status==='Aktif').length;
-  const exp90 = DB.staf.filter(s=>s.status==='Aktif'&&daysUntil(s.tglKontrakBerakhir)<=90&&daysUntil(s.tglKontrakBerakhir)>=0).length;
+  const aktif = DB.staf.filter(s => s.status === 'Aktif').length;
+  const exp90 = DB.staf.filter(s => s.status === 'Aktif' && daysUntil(s.tglKontrakBerakhir) <= 90 && daysUntil(s.tglKontrakBerakhir) >= 0).length;
   const ym = curYM();
-  const recs = DB.absensi.filter(a=>a.tanggal.startsWith(ym));
-  const hadir = recs.filter(a=>a.status==='Hadir').length;
-  const terlambat = recs.filter(a=>a.status==='Terlambat').length;
-  const pct = aktif&&workDaysInMonth(ym)?Math.round((hadir+terlambat)/(aktif*workDaysInMonth(ym))*100):0;
-  set('lap-aktif',aktif);
-  set('lap-exp90',exp90);
-  set('lap-pct',pct+'%');
-  set('lap-history',DB.kontrak_history.length);
+  const recs = DB.absensi.filter(a => a.tanggal.startsWith(ym));
+  const hadir = recs.filter(a => a.status === 'Hadir').length;
+  const terlambat = recs.filter(a => a.status === 'Terlambat').length;
+  const pct = aktif && workDaysInMonth(ym) ? Math.round((hadir + terlambat) / (aktif * workDaysInMonth(ym)) * 100) : 0;
+  set('lap-aktif', aktif);
+  set('lap-exp90', exp90);
+  set('lap-pct', pct + '%');
+  set('lap-history', DB.kontrak_history.length);
 }
 
 function renderLaporanCharts() {
@@ -1162,29 +1169,33 @@ function renderLaporanCharts() {
   if (!ctx || typeof Chart === 'undefined') return;
   try {
     if (ctx._ch) ctx._ch.destroy();
-    const months=[],dH=[],dT=[],dI=[],dS=[];
-    const now=new Date();
-    for(let i=5;i>=0;i--){
-      const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-      const ym=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-      months.push(d.toLocaleDateString('id-ID',{month:'short',year:'2-digit'}));
-      const r=DB.absensi.filter(a=>a.tanggal.startsWith(ym));
-      dH.push(r.filter(a=>a.status==='Hadir').length);
-      dT.push(r.filter(a=>a.status==='Terlambat').length);
-      dI.push(r.filter(a=>a.status==='Izin').length);
-      dS.push(r.filter(a=>a.status==='Sakit').length);
+    const months = [], dH = [], dT = [], dI = [], dS = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      months.push(d.toLocaleDateString('id-ID', { month: 'short', year: '2-digit' }));
+      const r = DB.absensi.filter(a => a.tanggal.startsWith(ym));
+      dH.push(r.filter(a => a.status === 'Hadir').length);
+      dT.push(r.filter(a => a.status === 'Terlambat').length);
+      dI.push(r.filter(a => a.status === 'Izin').length);
+      dS.push(r.filter(a => a.status === 'Sakit').length);
     }
-    if (!dH.some(v=>v>0)&&!dT.some(v=>v>0)&&!dI.some(v=>v>0)&&!dS.some(v=>v>0)) return;
-    ctx._ch = new Chart(ctx,{
-      type:'line',
-      data:{labels:months,datasets:[
-        {label:'Hadir',data:dH,borderColor:'#16a34a',backgroundColor:'rgba(22,163,74,.1)',tension:.3,fill:true},
-        {label:'Terlambat',data:dT,borderColor:'#d97706',tension:.3},
-        {label:'Izin',data:dI,borderColor:'#7c3aed',tension:.3},
-        {label:'Sakit',data:dS,borderColor:'#dc2626',tension:.3},
-      ]},
-      options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12}}},scales:{y:{beginAtZero:true}}}
+    if (!dH.some(v => v > 0) && !dT.some(v => v > 0) && !dI.some(v => v > 0) && !dS.some(v => v > 0)) return;
+    ctx._ch = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: months, datasets: [
+          { label: 'Hadir', data: dH, borderColor: '#16a34a', backgroundColor: 'rgba(22,163,74,.1)', tension: .3, fill: true },
+          { label: 'Terlambat', data: dT, borderColor: '#d97706', tension: .3 },
+          { label: 'Izin', data: dI, borderColor: '#7c3aed', tension: .3 },
+          { label: 'Sakit', data: dS, borderColor: '#dc2626', tension: .3 },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top', labels: { font: { size: 11 }, boxWidth: 12 } } }, scales: { y: { beginAtZero: true } }
+      }
     });
   } catch (e) { console.warn(e); }
 }
@@ -1193,9 +1204,9 @@ function renderRiwayatPerpanjang() {
   const el = document.getElementById('riwayat-body');
   if (!el) return;
   if (!DB.kontrak_history.length) {
-    el.innerHTML=`<tr><td colspan="6">${emptyHtml('📋','Belum ada riwayat perpanjangan kontrak')}</td></tr>`; return;
+    el.innerHTML = `<tr><td colspan="6">${emptyHtml('📋', 'Belum ada riwayat perpanjangan kontrak')}</td></tr>`; return;
   }
-  el.innerHTML = [...DB.kontrak_history].reverse().map(h=>`<tr>
+  el.innerHTML = [...DB.kontrak_history].reverse().map(h => `<tr>
     <td><span class="td-id">${h.id}</span></td>
     <td><span class="td-name">${esc(h.nama)}</span></td>
     <td class="text-sm">${esc(h.jabatan)}</td>
@@ -1217,15 +1228,15 @@ function exportLaporan() {
 //  PENGATURAN (SETTINGS)
 // ============================================================
 function renderPengaturan() {
-  document.getElementById('set-sppg').value = DB.meta.sppgName||'';
-  document.getElementById('set-admin').value = DB.meta.adminName||'';
-  document.getElementById('set-role').value = DB.meta.adminRole||'';
+  document.getElementById('set-sppg').value = DB.meta.sppgName || '';
+  document.getElementById('set-admin').value = DB.meta.adminName || '';
+  document.getElementById('set-role').value = DB.meta.adminRole || '';
 }
 
 function savePengaturan() {
-  DB.meta.sppgName = document.getElementById('set-sppg').value.trim()||'SPPG MBG';
-  DB.meta.adminName = document.getElementById('set-admin').value.trim()||'Administrator';
-  DB.meta.adminRole = document.getElementById('set-role').value.trim()||'Admin MBG';
+  DB.meta.sppgName = document.getElementById('set-sppg').value.trim() || 'SPPG MBG';
+  DB.meta.adminName = document.getElementById('set-admin').value.trim() || 'Administrator';
+  DB.meta.adminRole = document.getElementById('set-role').value.trim() || 'Admin MBG';
   saveDB(); updateHeaderMeta();
   toast('Pengaturan disimpan ✅');
 }
@@ -1235,14 +1246,14 @@ function resetDB() {
   if (!confirm('Anda yakin ingin mereset semua data? Tindakan ini tidak dapat dibatalkan.')) return;
   localStorage.removeItem(STORE_KEY);
   DB = emptyDB();
-  toast('Semua data berhasil direset','warn');
+  toast('Semua data berhasil direset', 'warn');
   navigate('dashboard');
 }
 
 function backupData() {
   const json = JSON.stringify(DB, null, 2);
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([json],{type:'application/json'}));
+  a.href = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
   a.download = `backup_mbg_${todayStr()}.json`;
   a.click();
   toast('Backup data berhasil diunduh ✅');
@@ -1255,15 +1266,15 @@ function restoreData(input) {
   reader.onload = e => {
     try {
       const parsed = JSON.parse(e.target.result);
-      if (!parsed.staf || !parsed.absensi) { toast('Format file tidak valid','err'); return; }
+      if (!parsed.staf || !parsed.absensi) { toast('Format file tidak valid', 'err'); return; }
       DB = { ...emptyDB(), ...parsed };
       saveDB();
       toast('Data berhasil dipulihkan ✅');
       navigate(_page);
-    } catch(err) { toast('Gagal membaca file: '+err.message,'err'); }
+    } catch (err) { toast('Gagal membaca file: ' + err.message, 'err'); }
   };
   reader.readAsText(file);
-  input.value='';
+  input.value = '';
 }
 
 // ============================================================
@@ -1279,8 +1290,8 @@ function setHtml(id, val) {
   if (el) el.innerHTML = val;
 }
 
-function emptyHtml(icon, text, btnLabel='', btnFn='') {
-  return `<div class="empty"><div class="ei">${icon}</div><div class="et">${text}</div>${btnLabel?`<div class="ea"><button class="btn btn-primary" onclick="${btnFn}">${btnLabel}</button></div>`:''}</div>`;
+function emptyHtml(icon, text, btnLabel = '', btnFn = '') {
+  return `<div class="empty"><div class="ei">${icon}</div><div class="et">${text}</div>${btnLabel ? `<div class="ea"><button class="btn btn-primary" onclick="${btnFn}">${btnLabel}</button></div>` : ''}</div>`;
 }
 
 // ============================================================
@@ -1374,8 +1385,8 @@ function renderExcelStafTable() {
   tbody.innerHTML = DB.staf.map((s, idx) => {
     const days = daysUntil(s.tglKontrakBerakhir);
     let sisaLabel = days < 0 ? `<span class="text-red font-bold">Habis (${Math.abs(days)}h lalu)</span>` :
-                    days <= 30 ? `<span class="text-red font-bold">${days} hari</span>` :
-                    days <= 90 ? `<span class="text-yellow font-bold">${days} hari</span>` : `<span class="text-green">${days} hari</span>`;
+      days <= 30 ? `<span class="text-red font-bold">${days} hari</span>` :
+        days <= 90 ? `<span class="text-yellow font-bold">${days} hari</span>` : `<span class="text-green">${days} hari</span>`;
     return `<tr>
       <td class="excel-col-head">${idx + 1}</td>
       <td><span class="td-id">${s.id}</span></td>
@@ -1476,13 +1487,13 @@ function renderExcelKontrakTable() {
   tbody.innerHTML = list.map((s, idx) => {
     const days = daysUntil(s.tglKontrakBerakhir);
     let periodeTag = days < 0 ? '<span class="badge br">Kadaluarsa</span>' :
-                     days <= 30 ? '<span class="badge br">Bulan Berjalan (≤30h)</span>' :
-                     days <= 60 ? '<span class="badge by">Bulan Depan (≤60h)</span>' :
-                     days <= 90 ? '<span class="badge by">Kuartal Ini (≤90h)</span>' : '<span class="badge bg">Masa Panjang (>90h)</span>';
+      days <= 30 ? '<span class="badge br">Bulan Berjalan (≤30h)</span>' :
+        days <= 60 ? '<span class="badge by">Bulan Depan (≤60h)</span>' :
+          days <= 90 ? '<span class="badge by">Kuartal Ini (≤90h)</span>' : '<span class="badge bg">Masa Panjang (>90h)</span>';
 
     let rekomendasi = days < 0 ? 'Segera terbitkan SK baru atau nonaktifkan' :
-                      days <= 30 ? 'Siapkan draf Surat Perpanjangan Kerja ke Kepala SPPG' :
-                      days <= 90 ? 'Lakukan evaluasi kinerja untuk rekomendasi perpanjangan' : 'Kontrak masih berjalan aman';
+      days <= 30 ? 'Siapkan draf Surat Perpanjangan Kerja ke Kepala SPPG' :
+        days <= 90 ? 'Lakukan evaluasi kinerja untuk rekomendasi perpanjangan' : 'Kontrak masih berjalan aman';
 
     return `<tr>
       <td class="excel-col-head">${idx + 1}</td>
@@ -1883,8 +1894,8 @@ function exportExcelSheet(sheetType) {
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
   // Nav items
-  document.querySelectorAll('.nav-item[data-page]').forEach(el=>{
-    el.addEventListener('click',()=>navigate(el.dataset.page));
+  document.querySelectorAll('.nav-item[data-page]').forEach(el => {
+    el.addEventListener('click', () => navigate(el.dataset.page));
   });
 
   // Sidebar toggle (Supports collapse on desktop & off-canvas drawer on tablet/mobile)
@@ -1905,32 +1916,32 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Modal backdrop close
-  document.querySelectorAll('.overlay').forEach(el=>{
-    el.addEventListener('click',e=>{ if(e.target===el) el.classList.remove('open'); });
+  document.querySelectorAll('.overlay').forEach(el => {
+    el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
   });
 
   // Header date
   const hDate = document.getElementById('h-date');
-  if (hDate) hDate.textContent = new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  if (hDate) hDate.textContent = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   // Staf filters
-  document.getElementById('sf-q')?.addEventListener('input',e=>{ _stafFilters.q=e.target.value; renderStafTable(); });
-  document.getElementById('sf-jab')?.addEventListener('change',e=>{ _stafFilters.jabatan=e.target.value; renderStafTable(); });
-  document.getElementById('sf-status')?.addEventListener('change',e=>{ _stafFilters.status=e.target.value; renderStafTable(); });
-  document.getElementById('sf-tipe')?.addEventListener('change',e=>{ _stafFilters.tipe=e.target.value; renderStafTable(); });
+  document.getElementById('sf-q')?.addEventListener('input', e => { _stafFilters.q = e.target.value; renderStafTable(); });
+  document.getElementById('sf-jab')?.addEventListener('change', e => { _stafFilters.jabatan = e.target.value; renderStafTable(); });
+  document.getElementById('sf-status')?.addEventListener('change', e => { _stafFilters.status = e.target.value; renderStafTable(); });
+  document.getElementById('sf-tipe')?.addEventListener('change', e => { _stafFilters.tipe = e.target.value; renderStafTable(); });
 
   // Absensi date
-  document.getElementById('abs-date')?.addEventListener('change',e=>{ _absDate=e.target.value; renderAbsensiTable(); });
+  document.getElementById('abs-date')?.addEventListener('change', e => { _absDate = e.target.value; renderAbsensiTable(); });
 
   // Rekap month
-  document.getElementById('rekap-ym')?.addEventListener('change',e=>{ _rekapYM=e.target.value; renderRekap(); });
+  document.getElementById('rekap-ym')?.addEventListener('change', e => { _rekapYM = e.target.value; renderRekap(); });
 
   // Kontrak filter
-  document.getElementById('kf-select')?.addEventListener('change',()=>renderKontrakTable());
-  document.getElementById('kf-tipe')?.addEventListener('change',()=>renderKontrakTable());
+  document.getElementById('kf-select')?.addEventListener('change', () => renderKontrakTable());
+  document.getElementById('kf-tipe')?.addEventListener('change', () => renderKontrakTable());
 
   // Perpanjang durasi
-  document.getElementById('pp-durasi')?.addEventListener('change',hitungDurasiPerpanjang);
+  document.getElementById('pp-durasi')?.addEventListener('change', hitungDurasiPerpanjang);
 
   navigate('dashboard');
 });
