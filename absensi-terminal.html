@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     /* ========================================================
-       TERMINAL ABSENSI — MBG MOBILE KIOSK v1.0
+       TERMINAL ABSENSI — MBG MOBILE KIOSK v2.0 WITH CAMERA
        Theme: White SaaS / Light Mode — consistent with dashboard
     ======================================================== */
     :root {
@@ -324,6 +324,74 @@
     .status-btn.active[data-s="Alpha"]     .s-check { background: var(--accent-red); }
 
     /* ============================================================ */
+    /*  CAMERA PREVIEW & PHOTO CAPTURE                               */
+    /* ============================================================ */
+    .camera-container {
+      position: relative;
+      width: 100%;
+      height: 240px;
+      background: #0f172a;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1) inset;
+      margin-bottom: 12px;
+    }
+    #camera-video, #photo-preview {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1); /* mirror selfie view */
+    }
+    #photo-preview {
+      display: none;
+    }
+    .camera-overlay-frame {
+      position: absolute;
+      inset: 16px;
+      border: 2px dashed rgba(255,255,255,0.45);
+      border-radius: 16px;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .camera-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      color: #94a3b8;
+      text-align: center;
+      padding: 16px;
+    }
+    .btn-cam-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 16px;
+      border-radius: var(--radius-pill);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1.5px solid var(--border-light);
+      background: #ffffff;
+      color: var(--text-main);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      transition: all 0.2s;
+    }
+    .btn-cam-action:active { transform: scale(0.96); }
+    .cam-btn-group {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    /* ============================================================ */
     /*  SUBMIT BUTTON                                                */
     /* ============================================================ */
     .btn-submit {
@@ -395,6 +463,24 @@
     @keyframes popIn {
       from { transform: scale(0.5); opacity: 0; }
       to   { transform: scale(1);   opacity: 1; }
+    }
+
+    .success-photo-wrap {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      overflow: hidden;
+      margin: 0 auto 16px;
+      border: 3px solid #fff;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+      background: #e2e8f0;
+      display: none;
+    }
+    .success-photo-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
     }
 
     .success-title {
@@ -593,7 +679,7 @@
       </div>
       <div>
         <div class="brand-title">Admin MBG</div>
-        <div class="brand-subtitle">Terminal Absensi</div>
+        <div class="brand-subtitle">Terminal Absensi Wajah</div>
       </div>
     </div>
   </div>
@@ -713,6 +799,53 @@
     </div>
   </div>
 
+  <!-- ===== FOTO WAJAH CARD ===== -->
+  <div class="card" id="camera-card">
+    <div class="card-title">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+      </svg>
+      Verifikasi Foto Wajah
+    </div>
+    <div class="card-desc">Ambil foto selfie langsung untuk bukti kehadiran yang valid.</div>
+
+    <div class="camera-container">
+      <div id="cam-placeholder" class="camera-placeholder">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+        </svg>
+        <span style="font-size:12px;color:#94a3b8">Kamera belum aktif</span>
+      </div>
+      <video id="camera-video" playsinline autoplay muted style="display:none;"></video>
+      <img id="photo-preview" alt="Foto Wajah">
+      <div id="camera-overlay" class="camera-overlay-frame" style="display:none;"></div>
+    </div>
+
+    <!-- Hidden canvas for capturing frame -->
+    <canvas id="photo-canvas" style="display:none;"></canvas>
+
+    <div class="cam-btn-group">
+      <button type="button" class="btn-cam-action" id="btn-start-cam" onclick="startCamera()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+        </svg>
+        Buka Kamera
+      </button>
+      <button type="button" class="btn-cam-action" id="btn-snap-cam" onclick="takeSnapshot()" style="display:none;background:var(--primary);color:#fff;border-color:var(--primary);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+        </svg>
+        Jepret Foto
+      </button>
+      <button type="button" class="btn-cam-action" id="btn-retake-cam" onclick="retakePhoto()" style="display:none;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3"/>
+        </svg>
+        Foto Ulang
+      </button>
+    </div>
+  </div>
+
   <!-- ===== KETERANGAN CARD ===== -->
   <div class="card" id="ket-card">
     <div class="card-title">
@@ -739,11 +872,15 @@
 
   <!-- ===== SUCCESS SCREEN ===== -->
   <div class="card" id="success-screen">
-    <div class="success-ring">
+    <div class="success-ring" id="success-ring">
       <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M20 6L9 17l-5-5"/>
       </svg>
     </div>
+    <div class="success-photo-wrap" id="success-photo-wrap">
+      <img id="success-photo-img" src="" alt="Foto Sukses">
+    </div>
+
     <div class="success-title">Absensi Tercatat!</div>
     <div class="success-subtitle" id="success-subtitle">Kehadiran Anda telah berhasil disimpan.</div>
 
@@ -791,7 +928,7 @@
       Buka Dashboard Admin
     </a>
   </div>
-  <div class="footer-copy">© 2025 Admin MBG · Terminal Absensi v1.0</div>
+  <div class="footer-copy">© 2025 Admin MBG · Terminal Absensi Wajah v2.0</div>
 
 </div><!-- /terminal-wrapper -->
 
@@ -800,7 +937,7 @@
 
 <script>
 /* ================================================================
-   TERMINAL ABSENSI — Logic
+   TERMINAL ABSENSI — Logic with Face Camera Verification
    Shares localStorage key: 'mbg_v2' with dashboard/app.js
 ================================================================ */
 const STORE_KEY = 'mbg_v2';
@@ -847,6 +984,8 @@ function todayStr() {
 /* ---- Init state ---- */
 let selectedStafId = null;
 let selectedStatus = null;
+let currentPhotoBase64 = null;
+let mediaStream = null;
 let DB = loadDB();
 
 /* ============================================================
@@ -869,11 +1008,111 @@ setInterval(updateClock, 1000);
 updateClock();
 
 /* ============================================================
+   CAMERA FUNCTIONS (HTML5 getUserMedia)
+============================================================ */
+async function startCamera() {
+  const video = document.getElementById('camera-video');
+  const placeholder = document.getElementById('cam-placeholder');
+  const overlay = document.getElementById('camera-overlay');
+  const btnStart = document.getElementById('btn-start-cam');
+  const btnSnap = document.getElementById('btn-snap-cam');
+
+  try {
+    if (mediaStream) {
+      stopCamera();
+    }
+    const constraints = {
+      video: {
+        facingMode: 'user', // prefer front/selfie camera on mobile
+        width: { ideal: 640 },
+        height: { ideal: 480 }
+      },
+      audio: false
+    };
+
+    mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+    video.srcObject = mediaStream;
+    video.style.display = 'block';
+    placeholder.style.display = 'none';
+    overlay.style.display = 'flex';
+    document.getElementById('photo-preview').style.display = 'none';
+
+    btnStart.style.display = 'none';
+    btnSnap.style.display = 'inline-flex';
+    showToast('Kamera aktif! Arahkan wajah ke layar.');
+  } catch(err) {
+    console.error('Camera error:', err);
+    showToast('Tidak dapat mengakses kamera: ' + (err.message || 'Izin ditolak'));
+  }
+}
+
+function stopCamera() {
+  if (mediaStream) {
+    mediaStream.getTracks().forEach(track => track.stop());
+    mediaStream = null;
+  }
+  const video = document.getElementById('camera-video');
+  video.srcObject = null;
+  video.style.display = 'none';
+  document.getElementById('camera-overlay').style.display = 'none';
+}
+
+function takeSnapshot() {
+  const video = document.getElementById('camera-video');
+  const canvas = document.getElementById('photo-canvas');
+  const preview = document.getElementById('photo-preview');
+  const btnSnap = document.getElementById('btn-snap-cam');
+  const btnRetake = document.getElementById('btn-retake-cam');
+
+  if (!video.videoWidth || !video.videoHeight) {
+    showToast('Kamera belum siap, tunggu sebentar...');
+    return;
+  }
+
+  // Target compressed square or portrait (320x320 max for ultra light storage)
+  const size = 320;
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  // Center crop & mirror capture
+  ctx.translate(size, 0);
+  ctx.scale(-1, 1);
+  const minDim = Math.min(video.videoWidth, video.videoHeight);
+  const sx = (video.videoWidth - minDim) / 2;
+  const sy = (video.videoHeight - minDim) / 2;
+  ctx.drawImage(video, sx, sy, minDim, minDim, 0, 0, size, size);
+
+  // Compress image to JPEG quality 0.72 (~25KB lightweight)
+  currentPhotoBase64 = canvas.toDataURL('image/jpeg', 0.72);
+
+  // Show captured photo
+  preview.src = currentPhotoBase64;
+  preview.style.display = 'block';
+  video.style.display = 'none';
+  document.getElementById('camera-overlay').style.display = 'none';
+
+  btnSnap.style.display = 'none';
+  btnRetake.style.display = 'inline-flex';
+
+  stopCamera();
+  showToast('Foto wajah berhasil diambil! ✓');
+  checkSubmitReady();
+}
+
+function retakePhoto() {
+  currentPhotoBase64 = null;
+  document.getElementById('photo-preview').style.display = 'none';
+  document.getElementById('btn-retake-cam').style.display = 'none';
+  startCamera();
+  checkSubmitReady();
+}
+
+/* ============================================================
    POPULATE STAFF DROPDOWN
 ============================================================ */
 function populateStaf() {
   const sel = document.getElementById('staf-select');
-  // Clear old options (keep placeholder)
   while (sel.options.length > 1) sel.remove(1);
 
   const aktif = DB.staf.filter(s => s.status === 'Aktif');
@@ -940,6 +1179,11 @@ function onStafChange() {
     dupWarn.style.display = 'none';
   }
 
+  // Otomatis buka kamera jika belum aktif untuk memudahkan staf
+  if (!mediaStream && !currentPhotoBase64) {
+    startCamera();
+  }
+
   checkSubmitReady();
 }
 
@@ -993,17 +1237,31 @@ function submitAbsensi() {
     keterangan: keteranganVal,
     jam:        jamStr,
     jamMasuk:   jamStr,
-    jamKeluar:  ''
+    jamKeluar:  '',
+    foto:       currentPhotoBase64 || '' // simpan foto wajah staf
   };
 
   DB.absensi.push(record);
   saveDB(DB);
+
+  stopCamera();
 
   /* ---- Show success screen ---- */
   hideFormCards();
 
   const successEl = document.getElementById('success-screen');
   successEl.style.display = 'flex';
+
+  const photoWrap = document.getElementById('success-photo-wrap');
+  const ring = document.getElementById('success-ring');
+  if (currentPhotoBase64) {
+    document.getElementById('success-photo-img').src = currentPhotoBase64;
+    photoWrap.style.display = 'block';
+    ring.style.display = 'none';
+  } else {
+    photoWrap.style.display = 'none';
+    ring.style.display = 'flex';
+  }
 
   document.getElementById('s-nama').textContent     = staf.nama;
   document.getElementById('s-jabatan').textContent  = staf.jabatan || '—';
@@ -1022,9 +1280,9 @@ function submitAbsensi() {
   }
 
   document.getElementById('success-subtitle').textContent =
-    `Kehadiran ${staf.nama} telah berhasil disimpan pada ${jamStr}.`;
+    `Kehadiran ${staf.nama} telah berhasil diverifikasi pada ${jamStr}.`;
 
-  showToast('Absensi berhasil dicatat!');
+  showToast('Absensi wajah berhasil dicatat!');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -1032,9 +1290,11 @@ function submitAbsensi() {
    RESET FORM
 ============================================================ */
 function resetForm() {
+  stopCamera();
   DB = loadDB();
   selectedStafId = null;
   selectedStatus = null;
+  currentPhotoBase64 = null;
 
   document.getElementById('staf-select').value = '';
   document.getElementById('keterangan').value  = '';
@@ -1042,6 +1302,13 @@ function resetForm() {
   document.getElementById('duplicate-warn').style.display = 'none';
   document.getElementById('submit-alert').style.display   = 'none';
   document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
+
+  // Reset camera UI
+  document.getElementById('photo-preview').style.display = 'none';
+  document.getElementById('cam-placeholder').style.display = 'flex';
+  document.getElementById('btn-start-cam').style.display = 'inline-flex';
+  document.getElementById('btn-snap-cam').style.display = 'none';
+  document.getElementById('btn-retake-cam').style.display = 'none';
 
   document.getElementById('success-screen').style.display = 'none';
   showFormCards();
@@ -1053,12 +1320,12 @@ function resetForm() {
    HELPER — show / hide cards
 ============================================================ */
 function hideFormCards() {
-  ['form-card','status-card','ket-card','submit-card'].forEach(id => {
+  ['form-card','status-card','camera-card','ket-card','submit-card'].forEach(id => {
     document.getElementById(id).style.display = 'none';
   });
 }
 function showFormCards() {
-  ['form-card','status-card','ket-card','submit-card'].forEach(id => {
+  ['form-card','status-card','camera-card','ket-card','submit-card'].forEach(id => {
     document.getElementById(id).style.display = '';
   });
 }
@@ -1088,7 +1355,7 @@ function showToast(msg) {
 populateStaf();
 checkSubmitReady();
 
-/* Re-sync DB on tab focus (in case admin added staf from dashboard) */
+/* Re-sync DB on tab focus */
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
     DB = loadDB();
@@ -1098,4 +1365,3 @@ document.addEventListener('visibilitychange', () => {
 </script>
 </body>
 </html>
-

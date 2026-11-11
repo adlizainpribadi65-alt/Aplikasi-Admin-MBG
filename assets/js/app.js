@@ -680,6 +680,10 @@ function renderAbsensiTable() {
     else if (st==='Alpha') al++;
     else bl++;
     const disabled = !st||st==='Izin'||st==='Sakit'||st==='Alpha';
+    const fotoHtml = r?.foto
+      ? `<img src="${r.foto}" alt="Foto ${esc(s.nama)}" style="width:34px;height:34px;border-radius:8px;object-fit:cover;cursor:pointer;border:1px solid #cbd5e1;" onclick="previewFotoModal('${r.foto}','${esc(s.nama)}')" title="Lihat foto wajah">`
+      : `<span style="font-size:.75rem;color:var(--text-subtle);">-</span>`;
+
     return `<tr>
       <td><span class="td-id">${s.id}</span></td>
       <td>
@@ -697,12 +701,13 @@ function renderAbsensiTable() {
       </td>
       <td><input type="time" class="ctrl" style="width:106px;padding:4px 8px;font-size:.78rem" value="${r?.jamMasuk||''}" onchange="setAbs('${s.id}','jamMasuk',this.value)" ${disabled?'disabled':''}></td>
       <td><input type="time" class="ctrl" style="width:106px;padding:4px 8px;font-size:.78rem" value="${r?.jamKeluar||''}" onchange="setAbs('${s.id}','jamKeluar',this.value)" ${disabled?'disabled':''}></td>
+      <td class="text-center">${fotoHtml}</td>
       <td><input type="text" class="ctrl" style="font-size:.78rem;padding:4px 8px" placeholder="Keterangan..." value="${esc(r?.keterangan||'')}" onchange="setAbs('${s.id}','keterangan',this.value)"></td>
     </tr>`;
   }).join('');
 
   if (!aktif.length) {
-    document.getElementById('abs-tbody').innerHTML = `<tr><td colspan="7">${emptyHtml('👥','Belum ada staf aktif. Tambahkan staf terlebih dahulu.')}</td></tr>`;
+    document.getElementById('abs-tbody').innerHTML = `<tr><td colspan="8">${emptyHtml('👥','Belum ada staf aktif. Tambahkan staf terlebih dahulu.')}</td></tr>`;
   }
 
   set('abs-h',h); set('abs-t',t); set('abs-i',i); set('abs-sk',sk); set('abs-al',al); set('abs-bl',bl);
@@ -717,6 +722,35 @@ function setAbs(stafId, field, value) {
   saveDB();
   if (field==='status') renderAbsensiTable();
 }
+
+function previewFotoModal(imgSrc, nama) {
+  let modal = document.getElementById('modal-preview-foto');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modal-preview-foto';
+    modal.className = 'modal-backdrop';
+    modal.style.display = 'none';
+    modal.innerHTML = `
+      <div class="modal" style="max-width:380px;text-align:center;">
+        <div class="modal-head">
+          <div class="modal-title" id="preview-foto-title">Bukti Foto Wajah</div>
+          <button class="modal-close" onclick="closeModal('modal-preview-foto')">✕</button>
+        </div>
+        <div class="modal-body" style="padding:20px;">
+          <img id="preview-foto-img" src="" alt="Foto Wajah" style="width:100%;max-width:280px;border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,0.15);border:2px solid var(--border-light);transform:scaleX(-1);">
+        </div>
+        <div class="modal-foot" style="justify-content:center;">
+          <button class="btn btn-primary" onclick="closeModal('modal-preview-foto')">Tutup</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+  document.getElementById('preview-foto-title').textContent = `Foto Wajah — ${nama}`;
+  document.getElementById('preview-foto-img').src = imgSrc;
+  openModal('modal-preview-foto');
+}
+window.previewFotoModal = previewFotoModal;
 
 function saveAbsensi() { saveDB(); toast('Absensi tersimpan ✅'); }
 
