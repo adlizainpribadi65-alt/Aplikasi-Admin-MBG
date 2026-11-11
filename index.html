@@ -3,1279 +3,760 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin MBG — Sistem Administrasi Kepegawaian</title>
+  <title>Login — Admin MBG</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="assets/js/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <link rel="stylesheet" href="assets/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    .hidden { display: none !important; }
-    .col-actions { width: 110px; }
-    #d-charts { display: contents; }
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --purple: #a855f7;
+      --red: #ef4444;
+      --green: #22c55e;
+      --border: rgba(255,255,255,0.08);
+      --border-focus: rgba(99,102,241,0.5);
+      --surface: rgba(255,255,255,0.04);
+      --surface-2: rgba(255,255,255,0.07);
+      --surface-3: rgba(255,255,255,0.11);
+      --text: #f1f5f9;
+      --muted: #64748b;
+      --soft: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0b0f1a;
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Animated background */
+    .bg-wrap {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+    }
+    .bg-wrap::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 20% 15%, rgba(99,102,241,0.16) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 60% at 80% 85%, rgba(168,85,247,0.13) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 40% at 50% 50%, rgba(59,130,246,0.06) 0%, transparent 70%);
+    }
+    .orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(80px); opacity: 0.16;
+      animation: floatOrb 14s ease-in-out infinite alternate;
+    }
+    .o1 { width: 500px; height: 500px; background: #6366f1; top: -160px; left: -160px; }
+    .o2 { width: 420px; height: 420px; background: #a855f7; bottom: -120px; right: -120px; animation-delay: -5s; }
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(35px, -35px) scale(1.08); }
+    }
+
+    .bg-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 36px 36px;
+    }
+
+    /* Container */
+    .login-container {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 440px;
+      margin: auto;
+    }
+
+    /* Header Brand */
+    .brand {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #818cf8;
+      background: rgba(99,102,241,0.12);
+      border: 1px solid rgba(99,102,241,0.25);
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 14px;
+    }
+    .brand-icon {
+      width: 58px; height: 58px;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      border-radius: 16px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 1.8rem;
+      margin-bottom: 12px;
+      box-shadow: 0 10px 25px rgba(99,102,241,0.35);
+    }
+    .brand h1 {
+      font-size: 1.65rem; font-weight: 800;
+      background: linear-gradient(135deg, #fff 30%, #a5b4fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 4px;
+    }
+    .brand p {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    /* Card Box */
+    .card {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 24px;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.5);
+    }
+
+    /* Active Session Banner */
+    .active-session-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: rgba(99,102,241,0.12);
+      border: 1px solid rgba(99,102,241,0.28);
+      font-size: 0.78rem;
+      color: #c7d2fe;
+      margin-bottom: 18px;
+    }
+    .active-session-banner.show { display: flex; }
+    .btn-resume {
+      padding: 5px 10px;
+      border-radius: 8px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+    .btn-resume:hover { background: var(--primary-dark); }
+
+    /* Switch Tabs */
+    .tabs {
+      display: flex; gap: 4px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 22px;
+    }
+    .tab {
+      flex: 1; text-align: center;
+      padding: 8px 12px;
+      border-radius: 9px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active {
+      background: var(--surface-3);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+
+    /* Alerts */
+    .alert {
+      display: none;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin-bottom: 16px;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid transparent;
+      animation: fadeIn 0.2s ease;
+    }
+    .alert.show { display: flex; }
+    .alert-err { background: rgba(239,68,68,0.12); color: #fca5a5; border-color: rgba(239,68,68,0.25); }
+    .alert-ok  { background: rgba(34,197,94,0.12); color: #86efac; border-color: rgba(34,197,94,0.25); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Inputs */
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--soft);
+      margin-bottom: 6px;
+    }
+    .input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-icon {
+      position: absolute; left: 14px;
+      font-size: 0.95rem;
+      color: var(--muted);
+      pointer-events: none;
+    }
+    .form-input {
+      width: 100%;
+      padding: 11px 14px 11px 40px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 11px;
+      color: var(--text);
+      font-size: 0.88rem;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .form-input:focus {
+      background: var(--surface-2);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+    }
+    .form-input::placeholder { color: var(--muted); }
+
+    .eye-btn {
+      position: absolute; right: 12px;
+      background: none; border: none;
+      color: var(--muted); cursor: pointer;
+      font-size: 1rem; padding: 4px;
+      transition: color 0.2s;
+    }
+    .eye-btn:hover { color: var(--text); }
+
+    .form-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 14px 0 20px;
+      font-size: 0.78rem;
+    }
+    .remember-label {
+      display: flex; align-items: center; gap: 8px;
+      color: var(--soft); cursor: pointer;
+    }
+    .remember-label input {
+      accent-color: var(--primary);
+      width: 15px; height: 15px;
+      cursor: pointer;
+    }
+    .forgot-link {
+      color: #818cf8; text-decoration: none; font-weight: 600; cursor: pointer;
+    }
+    .forgot-link:hover { color: #a5b4fc; text-decoration: underline; }
+
+    /* Button */
+    .btn-submit {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--purple));
+      border: none;
+      border-radius: 11px;
+      color: #fff;
+      font-size: 0.92rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 16px rgba(99,102,241,0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 22px rgba(99,102,241,0.45);
+    }
+    .btn-submit:active { transform: translateY(0); }
+    .btn-submit.loading { opacity: 0.7; pointer-events: none; }
+
+    .spinner {
+      display: none;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .btn-submit.loading .spinner { display: inline-block; }
+
+    /* Quick Demo Login */
+    .demo-box {
+      margin-top: 24px;
+      padding: 16px;
+      background: rgba(255,255,255,0.02);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+    }
+    .demo-head {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .demo-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 0.78rem;
+    }
+    .demo-item:last-child { border-bottom: none; }
+    .demo-user-name { font-weight: 600; color: var(--text); }
+    .demo-user-cred { color: var(--muted); font-size: 0.72rem; }
+    .btn-quick {
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      background: rgba(99,102,241,0.12);
+      color: #818cf8;
+      border: 1px solid rgba(99,102,241,0.25);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-quick:hover {
+      background: rgba(99,102,241,0.22);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .footer-hub {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .footer-hub a {
+      color: #818cf8;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .footer-hub a:hover { color: #a5b4fc; }
+
+    /* Panels */
+    .panel { display: none; }
+    .panel.active { display: block; }
   </style>
 </head>
 <body>
 
-<!-- Mobile overlay -->
-<div class="mob-overlay" id="mob-overlay"></div>
+<div class="bg-wrap">
+  <div class="bg-grid"></div>
+  <div class="orb o1"></div>
+  <div class="orb o2"></div>
+</div>
 
-<div id="app">
+<div class="login-container">
 
-<!-- =====================================================
-     SIDEBAR
-===================================================== -->
-<aside class="sidebar" id="sidebar">
-  <div class="sidebar-logo">
-    <div class="logo-icon">🍱</div>
-    <div class="logo-text">
-      <h1>Admin MBG</h1>
-      <span>Administrasi Kepegawaian</span>
+  <!-- Header -->
+  <div class="brand">
+    <div class="brand-badge"><span>⚡</span> SPPG Makan Bergizi Gratis</div>
+    <div>
+      <div class="brand-icon">🍱</div>
     </div>
+    <h1>Admin MBG</h1>
+    <p>Sistem Administrasi Kepegawaian & Pengelolaan Data</p>
   </div>
 
-  <nav class="sidebar-nav">
-    <div class="nav-label">Utama</div>
-    <div class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
-      <span class="icon">🏠</span> Dashboard
-    </div>
+  <!-- Auth Card -->
+  <div class="card">
 
-    <div class="nav-label">Kepegawaian</div>
-    <div class="nav-item" data-page="staf" onclick="navigate('staf')">
-      <span class="icon">👥</span> Data Staf
-    </div>
-    <div class="nav-item" data-page="absensi" onclick="navigate('absensi')">
-      <span class="icon">📋</span> Absensi Harian
-    </div>
-    <div class="nav-item" data-page="rekap" onclick="navigate('rekap')">
-      <span class="icon">📊</span> Rekap Bulanan
-    </div>
-    <div class="nav-item" data-page="kontrak" onclick="navigate('kontrak')">
-      <span class="icon">📄</span> Manajemen Kontrak
-      <span class="badge" id="nb-kontrak" style="display:none">0</span>
-    </div>
-
-    <div class="nav-label">Administrasi</div>
-    <div class="nav-item" data-page="excel" onclick="navigate('excel')">
-      <span class="icon">📗</span> Pengelolaan Excel
-    </div>
-    <div class="nav-item" data-page="laporan" onclick="navigate('laporan')">
-      <span class="icon">📈</span> Laporan
-    </div>
-    <div class="nav-item" data-page="pengaturan" onclick="navigate('pengaturan')">
-      <span class="icon">⚙️</span> Pengaturan
-    </div>
-  </nav>
-
-  <div style="padding:10px 14px;border-top:1px solid rgba(255,255,255,.08)">
-    <a href="/" style="display:flex;align-items:center;gap:8px;font-size:.76rem;color:#93c5fd;font-weight:600;text-decoration:none">
-      <span style="font-size:1rem">🚀</span> Portal Semua Projek
-    </a>
-  </div>
-
-  <div class="sidebar-user">
-    <div class="user-avatar" id="h-user-init">A</div>
-    <div class="user-info">
-      <div class="name" id="h-user-name">Admin MBG</div>
-      <div class="role" id="h-user-role">Administrator</div>
-    </div>
-  </div>
-</aside>
-
-<!-- =====================================================
-     MAIN
-===================================================== -->
-<div class="main">
-
-  <!-- HEADER -->
-  <header class="header">
-    <button class="header-toggle" id="mob-toggle">☰</button>
-    <div class="header-info">
-      <div class="header-title" id="h-title">Dashboard</div>
-      <div class="header-sub" id="h-sub">Ringkasan administrasi kepegawaian MBG</div>
-    </div>
-    <a href="/" class="btn btn-outline btn-sm" style="display:inline-flex;align-items:center;gap:5px;font-size:.76rem;padding:4px 10px;border-radius:99px;border:1px solid var(--gray-300);text-decoration:none;color:var(--gray-700);white-space:nowrap" title="Buka Portal Hub Semua Proyek">🚀 Hub Proyek</a>
-    <div class="header-date">📅 <span id="h-date"></span></div>
-    <button class="hbtn" title="Pengaturan" onclick="navigate('pengaturan')">⚙️</button>
-  </header>
-
-  <div class="pages">
-
-<!-- =====================================================
-     PAGE: DASHBOARD
-===================================================== -->
-<div class="page active" id="page-dashboard">
-  <!-- Welcome (shown when empty) -->
-  <div id="d-welcome"></div>
-
-  <!-- Stats (always visible) -->
-  <div class="stats" id="d-stats">
-    <div class="stat">
-      <div class="stat-ic si-blue">👥</div>
+    <!-- Active session shortcut (if previous session exists) -->
+    <div class="active-session-banner" id="banner-active-sess">
       <div>
-        <div class="stat-val" id="d-total">0</div>
-        <div class="stat-lbl">Total Staf</div>
+        <span>Sesi aktif: </span><strong id="banner-sess-name">Admin</strong>
       </div>
-    </div>
-    <div class="stat">
-      <div class="stat-ic si-green">✅</div>
-      <div>
-        <div class="stat-val" id="d-aktif">0</div>
-        <div class="stat-lbl">Staf Aktif</div>
-      </div>
-    </div>
-    <div class="stat">
-      <div class="stat-ic si-gray">❌</div>
-      <div>
-        <div class="stat-val" id="d-nonaktif">0</div>
-        <div class="stat-lbl">Nonaktif</div>
-      </div>
-    </div>
-    <div class="stat">
-      <div class="stat-ic si-cyan">📋</div>
-      <div>
-        <div class="stat-val" id="d-hadir">0/0</div>
-        <div class="stat-lbl">Hadir Hari Ini</div>
-      </div>
-    </div>
-    <div class="stat">
-      <div class="stat-ic si-red">⚠️</div>
-      <div>
-        <div class="stat-val" id="d-exp30">0</div>
-        <div class="stat-lbl">Kontrak ≤30 Hari</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Charts & Info (hidden when empty) -->
-  <div id="d-charts">
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-head">
-          <div class="card-title">🥧 Distribusi Jabatan</div>
-        </div>
-        <div class="card-body">
-          <div style="height:220px"><canvas id="c-jabatan"></canvas></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-head">
-          <div class="card-title">📈 Tren Kehadiran 3 Bulan</div>
-        </div>
-        <div class="card-body">
-          <div style="height:220px"><canvas id="c-trend"></canvas></div>
-        </div>
-      </div>
+      <button type="button" class="btn-resume" onclick="resumeSession()">Lanjut ke Dashboard →</button>
     </div>
 
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-head">
-          <div class="card-title">⚠️ Kontrak Akan Berakhir (≤90 Hari)</div>
-          <button class="btn btn-outline btn-sm" onclick="navigate('kontrak')">Lihat Semua →</button>
-        </div>
-        <div class="card-body p-0" style="padding:0 18px">
-          <div id="d-alerts"></div>
+    <div class="tabs">
+      <div class="tab active" id="tab-login" onclick="setTab('login')">🔐 Masuk</div>
+      <div class="tab" id="tab-reg" onclick="setTab('reg')">📝 Registrasi</div>
+    </div>
+
+    <!-- Alert Message -->
+    <div class="alert alert-err" id="alert-err">
+      <span>⚠️</span> <span id="alert-err-msg">Username atau password salah.</span>
+    </div>
+    <div class="alert alert-ok" id="alert-ok">
+      <span>✅</span> <span id="alert-ok-msg">Berhasil! Mengalihkan ke dashboard...</span>
+    </div>
+
+    <!-- ── FORM LOGIN ── -->
+    <div class="panel active" id="panel-login">
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <div class="input-wrap">
+          <span class="input-icon">👤</span>
+          <input type="text" id="login-user" class="form-input" placeholder="Masukkan username" autocomplete="username">
         </div>
       </div>
-      <div class="card">
-        <div class="card-head">
-          <div class="card-title">📊 Sebaran Jabatan Staf Aktif</div>
-        </div>
-        <div class="card-body">
-          <div id="d-jabatan"></div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔑</span>
+          <input type="password" id="login-pass" class="form-input" placeholder="Masukkan password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+          <button type="button" class="eye-btn" onclick="togglePass('login-pass', this)" title="Lihat password">👁️</button>
         </div>
       </div>
-    </div>
-  </div>
-</div>
 
-<!-- =====================================================
-     PAGE: DATA STAF
-===================================================== -->
-<div class="page" id="page-staf">
-  <div class="stats">
-    <div class="stat"><div class="stat-ic si-blue">👥</div><div><div class="stat-val" id="ss-total">0</div><div class="stat-lbl">Total Staf</div></div></div>
-    <div class="stat"><div class="stat-ic si-green">✅</div><div><div class="stat-val" id="ss-aktif">0</div><div class="stat-lbl">Aktif</div></div></div>
-    <div class="stat"><div class="stat-ic si-red">❌</div><div><div class="stat-val" id="ss-nonaktif">0</div><div class="stat-lbl">Nonaktif</div></div></div>
-    <div class="stat"><div class="stat-ic si-purple">🏷️</div><div><div class="stat-val" id="ss-jab">0</div><div class="stat-lbl">Jenis Jabatan</div></div></div>
-  </div>
-
-  <div class="card">
-    <div class="card-head">
-      <div class="card-title">👥 Database Staf</div>
-      <div class="toolbar">
-        <div class="search">
-          <span class="si">🔍</span>
-          <input type="text" id="sf-q" placeholder="Cari nama, ID, NIK...">
-        </div>
-        <select id="sf-jab" class="fselect">
-          <option value="">Semua Jabatan</option>
-          <option>Kepala SPPG</option><option>Admin MBG</option><option>Ahli Gizi</option>
-          <option>Juru Masak</option><option>Asisten Juru Masak</option>
-          <option>Petugas Distribusi</option><option>Kebersihan</option>
-          <option>Keamanan</option><option>Driver</option><option>Lainnya</option>
-        </select>
-        <select id="sf-status" class="fselect">
-          <option value="">Semua Status</option>
-          <option value="Aktif">Aktif</option>
-          <option value="Nonaktif">Nonaktif</option>
-        </select>
-        <button class="btn btn-excel btn-sm" onclick="exportStafExcel()">📗 Export Excel (.xlsx)</button>
-        <button class="btn btn-ghost btn-sm" onclick="exportStafCSV()">📥 CSV</button>
-        <button class="btn btn-primary btn-sm" onclick="openStafModal()">➕ Tambah Staf</button>
+      <div class="form-meta">
+        <label class="remember-label">
+          <input type="checkbox" id="remember-me" checked> Ingat akun saya
+        </label>
+        <span class="forgot-link" onclick="forgotHint()">Bantuan?</span>
       </div>
-    </div>
-    <div class="tbl-wrap">
-      <table class="tbl">
-        <thead>
-          <tr>
-            <th>ID</th><th>Nama Staf</th><th>Jabatan</th><th>Pendidikan</th>
-            <th>Tgl Masuk</th><th>Kontrak Berakhir</th><th>Status Kontrak</th>
-            <th>Status</th><th class="col-actions">Aksi</th>
-          </tr>
-        </thead>
-        <tbody id="staf-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
 
-<!-- =====================================================
-     PAGE: ABSENSI
-===================================================== -->
-<div class="page" id="page-absensi">
-  <div class="card">
-    <div class="card-head">
-      <div>
-        <div class="card-title">📋 Absensi Harian</div>
-        <div class="text-xs text-muted mt-1" id="abs-day-label"></div>
-      </div>
-      <div class="toolbar">
-        <input type="date" id="abs-date" class="ctrl" style="width:160px">
-        <button class="btn btn-green btn-sm" onclick="saveAbsensi()">💾 Simpan</button>
-        <button class="btn btn-excel btn-sm" onclick="exportAbsensiExcel()">📗 Export Excel (.xlsx)</button>
-        <button class="btn btn-ghost btn-sm" onclick="exportAbsensiCSV()">📥 CSV</button>
-      </div>
-    </div>
-    <div class="card-body" style="padding-bottom:0">
-      <div class="stats" style="margin-bottom:16px">
-        <div class="stat" style="padding:10px 12px">
-          <div class="stat-ic si-green" style="width:36px;height:36px;font-size:.9rem">✅</div>
-          <div><div class="stat-val" style="font-size:1.3rem" id="abs-h">0</div><div class="stat-lbl">Hadir</div></div>
-        </div>
-        <div class="stat" style="padding:10px 12px">
-          <div class="stat-ic si-yellow" style="width:36px;height:36px;font-size:.9rem">⏰</div>
-          <div><div class="stat-val" style="font-size:1.3rem" id="abs-t">0</div><div class="stat-lbl">Terlambat</div></div>
-        </div>
-        <div class="stat" style="padding:10px 12px">
-          <div class="stat-ic si-purple" style="width:36px;height:36px;font-size:.9rem">📝</div>
-          <div><div class="stat-val" style="font-size:1.3rem" id="abs-i">0</div><div class="stat-lbl">Izin</div></div>
-        </div>
-        <div class="stat" style="padding:10px 12px">
-          <div class="stat-ic si-red" style="width:36px;height:36px;font-size:.9rem">🤒</div>
-          <div><div class="stat-val" style="font-size:1.3rem" id="abs-sk">0</div><div class="stat-lbl">Sakit</div></div>
-        </div>
-        <div class="stat" style="padding:10px 12px">
-          <div class="stat-ic si-gray" style="width:36px;height:36px;font-size:.9rem">🚫</div>
-          <div><div class="stat-val" style="font-size:1.3rem" id="abs-al">0</div><div class="stat-lbl">Alpha</div></div>
-        </div>
-        <div class="stat" style="padding:10px 12px">
-          <div class="stat-ic" style="width:36px;height:36px;font-size:.9rem;background:var(--gray-100)">❓</div>
-          <div><div class="stat-val" style="font-size:1.3rem" id="abs-bl">0</div><div class="stat-lbl">Belum Diisi</div></div>
-        </div>
-      </div>
-    </div>
-    <div class="tbl-wrap">
-      <table class="tbl">
-        <thead>
-          <tr>
-            <th>ID</th><th>Nama Staf</th><th>Jabatan</th>
-            <th>Status</th><th>Jam Masuk</th><th>Jam Keluar</th><th>Keterangan</th>
-          </tr>
-        </thead>
-        <tbody id="abs-tbody"></tbody>
-      </table>
-    </div>
-  </div>
+      <button class="btn-submit" id="btn-login" onclick="doLogin()">
+        <span id="btn-login-txt">Masuk ke Dashboard →</span>
+        <span class="spinner" id="btn-login-spn"></span>
+      </button>
 
-  <div class="alert alert-info">
-    <span>ℹ️</span>
-    <div><strong>Panduan:</strong> Pilih status kehadiran tiap staf lalu isi jam masuk/keluar. Klik <strong>Simpan</strong> untuk menyimpan. Data otomatis tersimpan di perangkat Anda.</div>
-  </div>
-</div>
-
-<!-- =====================================================
-     PAGE: REKAP BULANAN
-===================================================== -->
-<div class="page" id="page-rekap">
-  <div class="card">
-    <div class="card-head">
-      <div>
-        <div class="card-title">📊 Rekap Bulanan — <span id="rekap-label"></span></div>
-      </div>
-      <div class="toolbar">
-        <input type="month" id="rekap-ym" class="ctrl" style="width:160px">
-        <button class="btn btn-excel btn-sm" onclick="exportRekapExcel()">📗 Export Excel (.xlsx)</button>
-        <button class="btn btn-ghost btn-sm" onclick="exportRekapCSV()">📥 CSV</button>
-      </div>
-    </div>
-    <div class="tbl-wrap">
-      <table class="tbl">
-        <thead>
-          <tr>
-            <th>ID</th><th>Nama</th><th>Jabatan</th>
-            <th class="text-center">Hadir</th><th class="text-center">Terlambat</th>
-            <th class="text-center">Izin</th><th class="text-center">Sakit</th>
-            <th class="text-center">Alpha</th><th>% Kehadiran</th><th>Kinerja</th>
-          </tr>
-        </thead>
-        <tbody id="rekap-tbody"></tbody>
-        <tfoot id="rekap-tfoot"></tfoot>
-      </table>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-head">
-      <div class="card-title">📊 Grafik Kehadiran Per Staf</div>
-    </div>
-    <div class="card-body">
-      <div style="height:260px"><canvas id="c-rekap"></canvas></div>
-    </div>
-  </div>
-
-  <!-- Formula Reference -->
-  <div class="card">
-    <div class="card-head">
-      <div class="card-title">🧮 Referensi Rumus Excel</div>
-      <span class="badge bb">Panduan</span>
-    </div>
-    <div class="card-body">
-      <div class="grid-2" style="gap:10px">
-        <div style="background:var(--gray-50);padding:12px;border-radius:9px;border-left:3px solid var(--primary)">
-          <div class="font-semi text-sm mb-1">Hitung Kehadiran</div>
-          <code style="font-size:.74rem;color:var(--primary);display:block">=COUNTIF(D2:D31,"Hadir")</code>
-          <div class="text-xs text-muted mt-1">Jumlah hari hadir dalam sebulan</div>
-        </div>
-        <div style="background:var(--gray-50);padding:12px;border-radius:9px;border-left:3px solid var(--green)">
-          <div class="font-semi text-sm mb-1">Persentase Kehadiran</div>
-          <code style="font-size:.74rem;color:var(--green);display:block">=(COUNTIF(D2:D31,"Hadir")+COUNTIF(D2:D31,"Terlambat"))/HariKerja*100</code>
-          <div class="text-xs text-muted mt-1">Persen kehadiran efektif per bulan</div>
-        </div>
-        <div style="background:var(--gray-50);padding:12px;border-radius:9px;border-left:3px solid var(--yellow)">
-          <div class="font-semi text-sm mb-1">Status Kontrak (IF)</div>
-          <code style="font-size:.74rem;color:var(--yellow);display:block">=IF(DAYS(G2,TODAY())&lt;=30,"Mendesak",IF(DAYS(G2,TODAY())&lt;=90,"Perhatian","Aman"))</code>
-          <div class="text-xs text-muted mt-1">Urgensi kontrak berdasarkan sisa hari</div>
-        </div>
-        <div style="background:var(--gray-50);padding:12px;border-radius:9px;border-left:3px solid var(--purple)">
-          <div class="font-semi text-sm mb-1">Cari Data (VLOOKUP)</div>
-          <code style="font-size:.74rem;color:var(--purple);display:block">=VLOOKUP(A2,DataStaf!A:H,3,FALSE)</code>
-          <div class="text-xs text-muted mt-1">Ambil data dari tabel berdasarkan ID</div>
-        </div>
-        <div style="background:var(--gray-50);padding:12px;border-radius:9px;border-left:3px solid var(--red)">
-          <div class="font-semi text-sm mb-1">Hitung Keterlambatan</div>
-          <code style="font-size:.74rem;color:var(--red);display:block">=COUNTIF(D2:D31,"Terlambat")</code>
-          <div class="text-xs text-muted mt-1">Frekuensi keterlambatan per staf</div>
-        </div>
-        <div style="background:var(--gray-50);padding:12px;border-radius:9px;border-left:3px solid var(--cyan)">
-          <div class="font-semi text-sm mb-1">XLOOKUP (Excel Modern)</div>
-          <code style="font-size:.74rem;color:var(--cyan);display:block">=XLOOKUP(A2,DataStaf[ID],DataStaf[Nama],"Tidak Ditemukan")</code>
-          <div class="text-xs text-muted mt-1">Versi modern VLOOKUP yang lebih fleksibel</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- =====================================================
-     PAGE: MANAJEMEN KONTRAK
-===================================================== -->
-<div class="page" id="page-kontrak">
-  <div class="stats">
-    <div class="stat"><div class="stat-ic si-red">🚨</div><div><div class="stat-val" id="ks-7">0</div><div class="stat-lbl">Kritis (≤7 Hari)</div></div></div>
-    <div class="stat"><div class="stat-ic si-red">⚠️</div><div><div class="stat-val" id="ks-30">0</div><div class="stat-lbl">Mendesak (≤30 Hari)</div></div></div>
-    <div class="stat"><div class="stat-ic si-yellow">⏳</div><div><div class="stat-val" id="ks-90">0</div><div class="stat-lbl">Perhatian (≤90 Hari)</div></div></div>
-    <div class="stat"><div class="stat-ic si-gray">📋</div><div><div class="stat-val" id="ks-exp">0</div><div class="stat-lbl">Sudah Berakhir</div></div></div>
-  </div>
-
-  <div class="card">
-    <div class="card-head">
-      <div class="card-title">📄 Daftar Kontrak Staf</div>
-      <div class="toolbar">
-        <select id="kf-select" class="fselect">
-          <option value="all">Semua Aktif</option>
-          <option value="7">🚨 Kritis (≤7 hari)</option>
-          <option value="30">⚠️ Mendesak (≤30 hari)</option>
-          <option value="90">⏳ Perhatian (≤90 hari)</option>
-          <option value="exp">📋 Sudah Berakhir</option>
-        </select>
-      </div>
-    </div>
-    <div class="tbl-wrap">
-      <table class="tbl">
-        <thead>
-          <tr>
-            <th>ID</th><th>Nama Staf</th><th>Jabatan</th>
-            <th>Tgl Masuk</th><th>Kontrak Berakhir</th>
-            <th>Status Urgensi</th><th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody id="kontrak-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-head">
-      <div class="card-title">📅 Timeline Berakhirnya Kontrak Per Bulan</div>
-    </div>
-    <div class="card-body">
-      <div style="height:200px"><canvas id="c-kontrak"></canvas></div>
-    </div>
-  </div>
-</div>
-
-<!-- =====================================================
-     PAGE: LAPORAN
-===================================================== -->
-<div class="page" id="page-laporan">
-  <div class="stats">
-    <div class="stat"><div class="stat-ic si-green">👥</div><div><div class="stat-val" id="lap-aktif">0</div><div class="stat-lbl">Staf Aktif</div></div></div>
-    <div class="stat"><div class="stat-ic si-yellow">⏳</div><div><div class="stat-val" id="lap-exp90">0</div><div class="stat-lbl">Kontrak ≤90 Hari</div></div></div>
-    <div class="stat"><div class="stat-ic si-blue">📊</div><div><div class="stat-val" id="lap-pct">0%</div><div class="stat-lbl">Kehadiran Bulan Ini</div></div></div>
-    <div class="stat"><div class="stat-ic si-purple">📋</div><div><div class="stat-val" id="lap-history">0</div><div class="stat-lbl">Riwayat Perpanjangan</div></div></div>
-  </div>
-
-  <div class="card">
-    <div class="card-head">
-      <div class="card-title">📈 Tren Kehadiran 6 Bulan Terakhir</div>
-    </div>
-    <div class="card-body">
-      <div style="height:260px"><canvas id="c-laporan"></canvas></div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-head">
-      <div class="card-title">📋 Riwayat Perpanjangan Kontrak</div>
-      <div class="toolbar">
-        <button class="btn btn-excel btn-sm" onclick="exportLaporan()">📗 Export Riwayat Excel (.xlsx)</button>
-      </div>
-    </div>
-    <div class="tbl-wrap">
-      <table class="tbl">
-        <thead>
-          <tr><th>ID</th><th>Nama Staf</th><th>Jabatan</th><th>Kontrak Lama</th><th>Kontrak Baru</th><th>Tanggal Proses</th></tr>
-        </thead>
-        <tbody id="riwayat-body"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Aksi Cepat -->
-  <div class="card">
-    <div class="card-head">
-      <div class="card-title">⚡ Aksi Cepat Export</div>
-    </div>
-    <div class="card-body">
-      <div class="grid-3" style="gap:10px">
-        <button class="btn btn-excel btn-block" onclick="exportStafExcel()">📗 Export Data Staf (.xlsx)</button>
-        <button class="btn btn-green btn-block" onclick="exportRekapExcel()">📗 Export Rekap Absensi (.xlsx)</button>
-        <button class="btn btn-purple btn-block" onclick="exportLaporan()">📗 Export Riwayat Kontrak (.xlsx)</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- =====================================================
-     PAGE: PENGELOLAAN EXCEL (TUGAS ADMINISTRASI EXCEL)
-===================================================== -->
-<div class="page" id="page-excel">
-  <!-- Banner Header Modul Excel -->
-  <div class="card excel-theme" style="border-left:4px solid #107c41;background:linear-gradient(180deg,#fff 0%,#f0fdf4 100%)">
-    <div class="card-body" style="padding:14px 16px">
-      <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:10px">
-        <div class="flex items-center gap-2" style="min-width:0">
-          <div style="width:38px;height:38px;background:#107c41;color:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:800;flex-shrink:0">
-            X
-          </div>
-          <div style="min-width:0">
-            <div style="font-size:1rem;font-weight:800;color:#107c41;line-height:1.2">Pusat Pengelolaan Data Microsoft Excel MBG</div>
-            <div class="text-xs text-muted" style="margin-top:2px">Mencakup 10 Standar Tugas Administrasi & Pengolahan Data Excel Kepegawaian</div>
-          </div>
-        </div>
-        <div class="flex gap-2" style="flex-wrap:wrap">
-          <button class="btn btn-excel btn-sm" onclick="downloadAllExcelWorkbook()">
-            📗 Unduh Buku Kerja Excel (.xlsx)
-          </button>
-          <button class="btn btn-ghost btn-sm" onclick="exportStafCSV()">
-            📥 Export CSV Database
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Checklist 10 Tugas Admin Excel -->
-  <div class="card">
-    <div class="card-head">
-      <div class="card-title">📋 10 Modul Pengelolaan Data Microsoft Excel (Bagian B)</div>
-      <span class="badge badge-excel">Sistem Terintegrasi</span>
-    </div>
-    <div class="card-body" style="padding:14px">
-      <div class="grid-2" style="gap:8px">
-        <div class="audit-check-item clickable" onclick="openExcelModule('db')" title="Klik untuk membuka Database Seluruh Staf">
+      <!-- Quick Demo Accounts -->
+      <div class="demo-box">
+        <div class="demo-head">⚡ Akun Demo Instan</div>
+        <div class="demo-item">
           <div>
-            <div class="font-semi text-sm">1. Database Seluruh Staf</div>
-            <div class="text-xs text-muted">Struktur data lengkap, NIK, alamat, dan gaji</div>
+            <div class="demo-user-name">👑 Administrator</div>
+            <div class="demo-user-cred">admin / admin123</div>
           </div>
-          <div class="flex items-center gap-1">
-            <span class="badge bg" id="chk-b1">Tersedia</span>
-            <span class="card-arrow">➔</span>
-          </div>
+          <button type="button" class="btn-quick" onclick="quickFill('admin', 'admin123')">Gunakan</button>
         </div>
-
-        <div class="audit-check-item clickable" onclick="openExcelModule('db')" title="Klik untuk membuka Tabel Identitas, Jabatan & Kontrak">
+        <div class="demo-item">
           <div>
-            <div class="font-semi text-sm">2. Tabel Identitas, Jabatan & Kontrak</div>
-            <div class="text-xs text-muted">Kolom tgl masuk, tgl berakhir, dan masa kerja</div>
+            <div class="demo-user-name">📋 Operator SPPG</div>
+            <div class="demo-user-cred">operator / op123</div>
           </div>
-          <div class="flex items-center gap-1">
-            <span class="badge bg" id="chk-b2">Tersedia</span>
-            <span class="card-arrow">➔</span>
-          </div>
+          <button type="button" class="btn-quick" onclick="quickFill('operator', 'op123')">Gunakan</button>
         </div>
-
-        <div class="audit-check-item clickable" onclick="openExcelModule('rekap')" title="Klik untuk membuka Rekapitulasi Absensi">
+        <div class="demo-item">
           <div>
-            <div class="font-semi text-sm">3. Rekapitulasi Absensi Harian & Bulanan</div>
-            <div class="text-xs text-muted">Format lembar absensi periodik terstruktur</div>
+            <div class="demo-user-name">🔍 Viewer / Audit</div>
+            <div class="demo-user-cred">viewer / view123</div>
           </div>
-          <div class="flex items-center gap-1">
-            <span class="badge bg" id="chk-b3">Tersedia</span>
-            <span class="card-arrow">➔</span>
-          </div>
-        </div>
-
-        <div class="audit-check-item clickable" onclick="openExcelModule('rekap')" title="Klik untuk membuka Kalkulasi Kehadiran & Disiplin">
-          <div>
-            <div class="font-semi text-sm">4. Kalkulasi Kehadiran, Izin, Sakit, Terlambat</div>
-            <div class="text-xs text-muted">Penghitungan otomatis per kategori dan % efektif</div>
-          </div>
-          <div class="flex items-center gap-1">
-            <span class="badge bg" id="chk-b4">Tersedia</span>
-            <span class="card-arrow">➔</span>
-          </div>
-        </div>
-
-        <div class="audit-check-item clickable" onclick="openExcelModule('kontrak', '30')" title="Klik untuk memantau Kontrak Segera Berakhir">
-          <div>
-            <div class="font-semi text-sm">5. Daftar Kontrak Segera Berakhir</div>
-            <div class="text-xs text-muted">Deteksi jatuh tempo ≤30 hari dan ≤90 hari</div>
-          </div>
-          <div class="flex items-center gap-1">
-            <span class="badge by" id="chk-b5">Monitoring</span>
-            <span class="card-arrow">➔</span>
-          </div>
-        </div>
-
-        <div class="audit-check-item clickable" onclick="openExcelModule('rumus')" title="Klik untuk membuka Simulator Rumus Excel">
-          <div>
-            <div class="font-semi text-sm">6. Rumus SUM, COUNTIF, IF, VLOOKUP, XLOOKUP</div>
-            <div class="text-xs text-muted">Simulasi kalkulasi formula interaktif</div>
-          </div>
-          <div class="flex items-center gap-1">
-            <span class="badge bp" id="chk-b6">Formula Lab</span>
-            <span class="card-arrow">➔</span>
-          </div>
-        </div>
-
-        <div class="audit-check-item clickable" onclick="openExcelModule('kontrak', 'all')" title="Klik untuk melihat Laporan Kontrak per Periode">
-          <div>
-            <div class="font-semi text-sm">7. Laporan Perpanjangan Kontrak per Periode</div>
-            <div class="text-xs text-muted">Penyaringan riwayat dan target per semester/tahun</div>
-          </div>
-          <div class="flex items-center gap-1">
-            <span class="badge bg" id="chk-b7">Tersedia</span>
-            <span class="card-arrow">➔</span>
-          </div>
-        </div>
-
-        <div class="audit-check-item clickable" onclick="openExcelModule('pivot')" title="Klik untuk membuka Pengelompokan Jabatan & Status">
-          <div>
-            <div class="font-semi text-sm">8. Pengelompokan Jabatan & Status Keaktifan</div>
-            <div class="text-xs text-muted">Pivot data staf per divisi dan keaktifan</div>
-          </div>
-          <div class="flex items-center gap-1">
-            <span class="badge bg" id="chk-b8">Tersedia</span>
-            <span class="card-arrow">➔</span>
-          </div>
-        </div>
-
-        <div class="audit-check-item clickable" onclick="openExcelModule('grafik')" title="Klik untuk membuka Laporan Bulanan & Grafik">
-          <div>
-            <div class="font-semi text-sm">9. Laporan Bulanan Tabel & Grafik</div>
-            <div class="text-xs text-muted">Visualisasi presentasi laporan ke Kepala SPPG</div>
-          </div>
-          <div class="flex items-center gap-1">
-            <span class="badge bg" id="chk-b9">Tersedia</span>
-            <span class="card-arrow">➔</span>
-          </div>
-        </div>
-
-        <div class="audit-check-item clickable" onclick="openExcelModule('audit')" title="Klik untuk menjalankan Audit & Verifikasi Data">
-          <div>
-            <div class="font-semi text-sm">10. Data Rapi, Akurat & Tervalidasi</div>
-            <div class="text-xs text-muted">Audit data ganda, kolom kosong, dan konsistensi</div>
-          </div>
-          <div class="flex items-center gap-1">
-            <span class="badge bc" id="chk-b10">Tervalidasi</span>
-            <span class="card-arrow">➔</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Navigasi Tab Modul Excel -->
-  <div class="tabs mb-2" id="excel-tabs">
-    <div class="tab active" onclick="switchExcelTab('db')">🗄️ B.1 & B.2: Database & Tabel Staf</div>
-    <div class="tab" onclick="switchExcelTab('rekap')">📊 B.3 & B.4: Rekap & Kalkulasi Absensi</div>
-    <div class="tab" onclick="switchExcelTab('kontrak')">⏳ B.5 & B.7: Kontrak & Periode</div>
-    <div class="tab" onclick="switchExcelTab('pivot')">👥 B.8: Pengelompokan Data</div>
-    <div class="tab" onclick="switchExcelTab('rumus')">🧮 B.6: Lab Rumus Excel</div>
-    <div class="tab" onclick="switchExcelTab('grafik')">📈 B.9: Laporan Bulanan</div>
-    <div class="tab" onclick="switchExcelTab('audit')">🔍 B.10: Validasi & Akurasi</div>
-  </div>
-
-  <!-- ================= SUB-TAB 1: Database & Tabel Staf (B.1 & B.2) ================= -->
-  <div id="ex-tab-db" class="tab-panel active">
-    <div class="card">
-      <div class="card-head">
-        <div>
-          <div class="card-title">🗄️ Database & Tabel Identitas Staf (B.1 & B.2)</div>
-          <div class="text-xs text-muted mt-1">Struktur tabel master data staf lengkap dengan tanggal masuk dan masa kontrak</div>
-        </div>
-        <div class="toolbar">
-          <button class="btn btn-excel btn-sm" onclick="exportExcelSheet('db')">📗 Export Sheet Staf (.xlsx)</button>
-          <button class="btn btn-ghost btn-sm" onclick="navigate('staf')">➕ Tambah / Edit Staf</button>
-        </div>
-      </div>
-      <div class="tbl-wrap">
-        <table class="tbl">
-          <thead>
-            <tr>
-              <th class="excel-col-head">No</th>
-              <th>ID Staf</th>
-              <th>Nama Lengkap</th>
-              <th>NIK (16 Digit)</th>
-              <th>Jabatan</th>
-              <th>Pendidikan</th>
-              <th>Tanggal Masuk</th>
-              <th>Masa Kontrak Berakhir</th>
-              <th>Sisa Hari</th>
-              <th>Status</th>
-              <th>Gaji Pokok</th>
-            </tr>
-          </thead>
-          <tbody id="ex-tbody-staf"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ================= SUB-TAB 2: Rekapitulasi Absensi & Kalkulasi (B.3 & B.4) ================= -->
-  <div id="ex-tab-rekap" class="tab-panel">
-    <div class="card">
-      <div class="card-head">
-        <div>
-          <div class="card-title">📊 Rekapitulasi Absensi Harian & Bulanan (B.3 & B.4)</div>
-          <div class="text-xs text-muted mt-1">Menghitung total kehadiran, izin, sakit, dan keterlambatan staf otomatis</div>
-        </div>
-        <div class="toolbar">
-          <input type="month" id="ex-rekap-ym" class="ctrl" style="width:160px">
-          <button class="btn btn-excel btn-sm" onclick="exportExcelSheet('rekap')">📗 Export Sheet Rekap (.xlsx)</button>
-        </div>
-      </div>
-      <div class="tbl-wrap">
-        <table class="tbl">
-          <thead>
-            <tr>
-              <th class="excel-col-head">No</th>
-              <th>ID</th>
-              <th>Nama Staf</th>
-              <th>Jabatan</th>
-              <th class="text-center">Hadir (Hari)</th>
-              <th class="text-center">Terlambat (Hari)</th>
-              <th class="text-center">Izin (Hari)</th>
-              <th class="text-center">Sakit (Hari)</th>
-              <th class="text-center">Alpha (Hari)</th>
-              <th>Total Kehadiran Efektif</th>
-              <th>% Disiplin</th>
-            </tr>
-          </thead>
-          <tbody id="ex-tbody-rekap"></tbody>
-          <tfoot id="ex-tfoot-rekap"></tfoot>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ================= SUB-TAB 3: Monitoring Kontrak & Periode (B.5 & B.7) ================= -->
-  <div id="ex-tab-kontrak" class="tab-panel">
-    <div class="card">
-      <div class="card-head">
-        <div>
-          <div class="card-title">⏳ Daftar Kontrak Segera Berakhir & Perpanjangan per Periode (B.5 & B.7)</div>
-          <div class="text-xs text-muted mt-1">Memantau staf yang masa kontraknya mendekati batas akhir per periode</div>
-        </div>
-        <div class="toolbar">
-          <select id="ex-filter-kontrak-periode" class="fselect" onchange="renderExcelKontrakTable()">
-            <option value="all">Semua Sisa Hari</option>
-            <option value="30">Sangat Segera (≤ 30 Hari)</option>
-            <option value="60">Mendekati (≤ 60 Hari)</option>
-            <option value="90">Perlu Perhatian (≤ 90 Hari)</option>
-            <option value="exp">Telah Berakhir</option>
-          </select>
-          <button class="btn btn-excel btn-sm" onclick="exportExcelSheet('kontrak')">📗 Export Sheet Kontrak (.xlsx)</button>
-        </div>
-      </div>
-      <div class="tbl-wrap">
-        <table class="tbl">
-          <thead>
-            <tr>
-              <th class="excel-col-head">No</th>
-              <th>ID</th>
-              <th>Nama Staf</th>
-              <th>Jabatan</th>
-              <th>Tanggal Masuk</th>
-              <th>Kontrak Berakhir</th>
-              <th>Sisa Hari</th>
-              <th>Kategori Periode</th>
-              <th>Rekomendasi Tindakan</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody id="ex-tbody-kontrak"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ================= SUB-TAB 4: Pengelompokan Data (B.8) ================= -->
-  <div id="ex-tab-pivot" class="tab-panel">
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-head">
-          <div class="card-title">👥 Pengelompokan Berdasarkan Jabatan</div>
-          <button class="btn btn-ghost btn-xs" onclick="exportExcelSheet('pivot-jab')">Export XLS</button>
-        </div>
-        <div class="tbl-wrap">
-          <table class="tbl">
-            <thead>
-              <tr><th>Jabatan</th><th class="text-center">Jumlah Aktif</th><th class="text-center">Nonaktif</th><th class="text-center">Total Staf</th><th>Porsi (%)</th></tr>
-            </thead>
-            <tbody id="ex-tbody-pivot-jab"></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-head">
-          <div class="card-title">📌 Pengelompokan Berdasarkan Status Keaktifan</div>
-        </div>
-        <div class="card-body">
-          <div id="ex-pivot-status-summary"></div>
-          <div style="height:200px;margin-top:14px">
-            <canvas id="c-ex-pivot"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ================= SUB-TAB 5: Lab Rumus Excel (B.6) ================= -->
-  <div id="ex-tab-rumus" class="tab-panel">
-    <div class="card">
-      <div class="card-head">
-        <div class="card-title">🧮 Laboratorium Rumus Excel (B.6)</div>
-        <span class="badge bb">Simulator Interaktif Realtime</span>
-      </div>
-      <div class="card-body">
-        <div class="alert alert-info mb-3">
-          <span>💡</span>
-          <div>Pilih rumus di bawah untuk menguji kalkulasi otomatis menggunakan dataset aktif MBG. Anda dapat melihat rumus asli Excel dan hasilnya secara langsung!</div>
-        </div>
-
-        <div class="grid-2" style="gap:14px">
-          <!-- 1. SUM -->
-          <div class="formula-card">
-            <div class="formula-header">
-              <span class="font-bold text-sm">1. Rumus SUM (Total Akumulasi)</span>
-              <span class="formula-tag">SUM</span>
-            </div>
-            <div class="formula-bar">
-              <span class="formula-fx">fx</span>
-              <input class="formula-input" readonly value="=SUM(Gaji_Pokok_Staf_Aktif)">
-            </div>
-            <div class="text-xs text-muted mt-2">Menjumlahkan seluruh total pengeluaran gaji staf aktif MBG per bulan.</div>
-            <div class="formula-result" id="res-sum">Hasil: Rp 0</div>
-          </div>
-
-          <!-- 2. COUNTIF -->
-          <div class="formula-card">
-            <div class="formula-header">
-              <span class="font-bold text-sm">2. Rumus COUNTIF (Hitung Kriteria)</span>
-              <span class="formula-tag">COUNTIF</span>
-            </div>
-            <div class="formula-bar">
-              <span class="formula-fx">fx</span>
-              <input class="formula-input" readonly id="fx-countif-str" value='=COUNTIF(Jabatan, "Juru Masak")'>
-            </div>
-            <div class="flex gap-2 items-center mt-2">
-              <label class="text-xs text-muted">Kriteria Jabatan:</label>
-              <select id="sim-countif-crit" class="fselect" style="font-size:.74rem;padding:3px 6px" onchange="runFormulaSimulator()">
-                <option value="Juru Masak">Juru Masak</option>
-                <option value="Ahli Gizi">Ahli Gizi</option>
-                <option value="Admin MBG">Admin MBG</option>
-                <option value="Petugas Distribusi">Petugas Distribusi</option>
-                <option value="Kepala SPPG">Kepala SPPG</option>
-              </select>
-            </div>
-            <div class="formula-result" id="res-countif">Hasil: 0 Orang</div>
-          </div>
-
-          <!-- 3. IF -->
-          <div class="formula-card">
-            <div class="formula-header">
-              <span class="font-bold text-sm">3. Rumus IF (Status & Logika Kontrak)</span>
-              <span class="formula-tag">IF</span>
-            </div>
-            <div class="formula-bar">
-              <span class="formula-fx">fx</span>
-              <input class="formula-input" readonly value='=IF(SisaHari<=30, "Mendesak", IF(SisaHari<=90, "Perhatian", "Aman"))'>
-            </div>
-            <div class="flex gap-2 items-center mt-2">
-              <label class="text-xs text-muted">Uji Sisa Hari:</label>
-              <input type="number" id="sim-if-days" class="ctrl" style="width:90px;padding:3px 6px;font-size:.74rem" value="25" oninput="runFormulaSimulator()">
-              <span class="text-xs text-muted">hari lagi</span>
-            </div>
-            <div class="formula-result" id="res-if">Status: Mendesak (Wajib Segera Diperpanjang)</div>
-          </div>
-
-          <!-- 4. VLOOKUP -->
-          <div class="formula-card">
-            <div class="formula-header">
-              <span class="font-bold text-sm">4. Rumus VLOOKUP (Pencarian Vertikal)</span>
-              <span class="formula-tag">VLOOKUP</span>
-            </div>
-            <div class="formula-bar">
-              <span class="formula-fx">fx</span>
-              <input class="formula-input" readonly id="fx-vlookup-str" value='=VLOOKUP(ID_Staf, Tabel_Staf, 2, FALSE)'>
-            </div>
-            <div class="flex gap-2 items-center mt-2">
-              <label class="text-xs text-muted">Pilih ID Staf:</label>
-              <select id="sim-vlookup-id" class="fselect" style="font-size:.74rem;padding:3px 6px" onchange="runFormulaSimulator()"></select>
-            </div>
-            <div class="formula-result" id="res-vlookup">Nama: - | Jabatan: -</div>
-          </div>
-
-          <!-- 5. XLOOKUP -->
-          <div class="formula-card" style="grid-column:1/-1">
-            <div class="formula-header">
-              <span class="font-bold text-sm">5. Rumus XLOOKUP (Pencarian Fleksibel Modern)</span>
-              <span class="formula-tag" style="background:#dcfce7;color:#166534">XLOOKUP</span>
-            </div>
-            <div class="formula-bar">
-              <span class="formula-fx">fx</span>
-              <input class="formula-input" readonly id="fx-xlookup-str" value='=XLOOKUP(Cari_Nama, Daftar_Nama, Daftar_Jabatan, "Tidak Ditemukan")'>
-            </div>
-            <div class="flex gap-2 items-center mt-2">
-              <label class="text-xs text-muted">Ketik / Pilih Nama:</label>
-              <input type="text" id="sim-xlookup-input" class="ctrl" style="width:220px;padding:3px 8px;font-size:.74rem" placeholder="Ketik nama staf..." oninput="runFormulaSimulator()">
-            </div>
-            <div class="formula-result" id="res-xlookup">Data Ditemukan: Silakan masukkan nama staf</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ================= SUB-TAB 6: Laporan Bulanan (B.9) ================= -->
-  <div id="ex-tab-grafik" class="tab-panel">
-    <div class="card">
-      <div class="card-head">
-        <div>
-          <div class="card-title">📈 Laporan Administrasi Bulanan dalam Tabel & Grafik (B.9)</div>
-          <div class="text-xs text-muted mt-1">Format siap cetak dan siap dilampirkan untuk Kepala SPPG</div>
-        </div>
-        <div class="toolbar">
-          <button class="btn btn-excel btn-sm" onclick="exportExcelSheet('rekap')">📗 Cetak / Export Rekap Excel</button>
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="grid-2">
-          <div>
-            <div class="font-semi text-sm mb-2">Ringkasan Eksekutif Kepegawaian</div>
-            <div style="background:var(--gray-50);padding:14px;border-radius:8px;font-size:.82rem;line-height:1.7" id="ex-laporan-summary-box">
-              Memuat data ringkasan...
-            </div>
-          </div>
-          <div>
-            <div class="font-semi text-sm mb-2">Visualisasi Grafik Absensi Bulanan</div>
-            <div style="height:220px">
-              <canvas id="c-ex-laporan"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ================= SUB-TAB 7: Validasi & Akurasi Data (B.10) ================= -->
-  <div id="ex-tab-audit" class="tab-panel">
-    <div class="card">
-      <div class="card-head">
-        <div>
-          <div class="card-title">🔍 Verifikasi & Audit Keakuratan Data Excel (B.10)</div>
-          <div class="text-xs text-muted mt-1">Memastikan data Excel selalu diperbarui, rapi, dan bebas anomali</div>
-        </div>
-        <button class="btn btn-ghost btn-sm" onclick="runExcelDataAudit()">🔄 Scan Ulang Database</button>
-      </div>
-      <div class="card-body">
-        <div id="ex-audit-container">
-          <!-- Audit items populated by JS -->
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- =====================================================
-     PAGE: PENGATURAN
-===================================================== -->
-<div class="page" id="page-pengaturan">
-  <div class="grid-2">
-    <!-- Profil -->
-    <div class="card">
-      <div class="card-head">
-        <div class="card-title">🏢 Profil SPPG</div>
-      </div>
-      <div class="card-body">
-        <div class="form-grid" style="grid-template-columns:1fr;gap:14px">
-          <div class="form-group">
-            <label class="label">Nama SPPG / Instansi</label>
-            <input type="text" id="set-sppg" class="ctrl" placeholder="Contoh: SPPG MBG Kecamatan Cilandak">
-          </div>
-          <div class="form-group">
-            <label class="label">Nama Admin</label>
-            <input type="text" id="set-admin" class="ctrl" placeholder="Nama lengkap administrator">
-          </div>
-          <div class="form-group">
-            <label class="label">Jabatan Admin</label>
-            <input type="text" id="set-role" class="ctrl" placeholder="Contoh: Admin MBG">
-          </div>
-          <div>
-            <button class="btn btn-primary btn-block" onclick="savePengaturan()">💾 Simpan Pengaturan</button>
-          </div>
+          <button type="button" class="btn-quick" onclick="quickFill('viewer', 'view123')">Gunakan</button>
         </div>
       </div>
     </div>
 
-    <!-- Backup & Restore -->
-    <div class="card">
-      <div class="card-head">
-        <div class="card-title">💾 Backup & Restore Data</div>
-      </div>
-      <div class="card-body">
-        <div class="alert alert-info mb-3">
-          <span>ℹ️</span>
-          <div>Data tersimpan di browser (localStorage). Lakukan backup rutin agar data tidak hilang jika browser dibersihkan.</div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <button class="btn btn-green btn-block" onclick="backupData()">📤 Unduh Backup (JSON)</button>
-          <label class="btn btn-outline btn-block" style="cursor:pointer">
-            📥 Pulihkan dari Backup
-            <input type="file" accept=".json" style="display:none" onchange="restoreData(this)">
-          </label>
+    <!-- ── FORM REGISTRASI ── -->
+    <div class="panel" id="panel-reg">
+      <div class="form-group">
+        <label class="form-label">Nama Lengkap</label>
+        <div class="input-wrap">
+          <span class="input-icon">🧑</span>
+          <input type="text" id="reg-name" class="form-input" placeholder="Nama lengkap Anda">
         </div>
       </div>
-    </div>
 
-    <!-- Statistik Data -->
-    <div class="card">
-      <div class="card-head">
-        <div class="card-title">📊 Statistik Penyimpanan</div>
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <div class="input-wrap">
+          <span class="input-icon">👤</span>
+          <input type="text" id="reg-user" class="form-input" placeholder="Username untuk login">
+        </div>
       </div>
-      <div class="card-body">
-        <div class="setting-row">
-          <div><div class="setting-label">Total Staf</div><div class="setting-desc">Semua data staf tersimpan</div></div>
-          <span class="badge bb" id="set-ct-staf">0</span>
-        </div>
-        <div class="setting-row">
-          <div><div class="setting-label">Record Absensi</div><div class="setting-desc">Total entri kehadiran</div></div>
-          <span class="badge bb" id="set-ct-abs">0</span>
-        </div>
-        <div class="setting-row">
-          <div><div class="setting-label">Riwayat Kontrak</div><div class="setting-desc">Total perpanjangan kontrak</div></div>
-          <span class="badge bb" id="set-ct-kh">0</span>
-        </div>
-        <div class="setting-row">
-          <div><div class="setting-label">Dibuat Pada</div><div class="setting-desc">Tanggal database dibuat</div></div>
-          <span class="text-xs text-muted" id="set-created">-</span>
-        </div>
-        <button class="btn btn-ghost btn-sm mt-3" onclick="refreshSetStats()">🔄 Refresh</button>
-      </div>
-    </div>
 
-    <!-- Danger Zone -->
-    <div class="card" style="border-color:#fca5a5">
-      <div class="card-head" style="background:#fff5f5">
-        <div class="card-title" style="color:var(--red)">🗑️ Zona Berbahaya</div>
-      </div>
-      <div class="card-body">
-        <div class="alert alert-danger mb-3">
-          <span>⚠️</span>
-          <div>Tindakan di bawah ini tidak dapat dibatalkan. Pastikan Anda sudah melakukan backup sebelum melanjutkan.</div>
-        </div>
-        <button class="btn btn-red btn-block" onclick="resetDB()">🗑️ Reset Semua Data</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-  </div><!-- .pages -->
-</div><!-- .main -->
-</div><!-- #app -->
-
-<!-- =====================================================
-     MODALS
-===================================================== -->
-
-<!-- Modal: Tambah/Edit Staf -->
-<div class="overlay" id="modal-staf">
-  <div class="modal modal-lg">
-    <div class="mhead">
-      <div class="mtitle" id="staf-modal-title">➕ Tambah Staf Baru</div>
-      <span class="mclose" onclick="closeModal('modal-staf')">✕</span>
-    </div>
-    <div class="mbody">
-      <form id="f-staf" onsubmit="return false">
-        <!-- Tabs -->
-        <div class="tabs mb-3" id="staf-form-tabs">
-          <div class="tab active" onclick="switchStafTab(0)">📋 Data Diri</div>
-          <div class="tab" onclick="switchStafTab(1)">💼 Kepegawaian</div>
-        </div>
-
-        <!-- Panel 1: Data Diri -->
-        <div id="sf-p0" class="tab-panel active">
-          <div class="form-grid">
-            <div class="form-group">
-              <label class="label required">Nama Lengkap</label>
-              <input name="nama" class="ctrl" placeholder="Nama sesuai KTP" required>
-            </div>
-            <div class="form-group">
-              <label class="label">NIK</label>
-              <input name="nik" class="ctrl" placeholder="16 digit NIK KTP" maxlength="16">
-            </div>
-            <div class="form-group">
-              <label class="label">Tempat Lahir</label>
-              <input name="tempatLahir" class="ctrl" placeholder="Kota tempat lahir">
-            </div>
-            <div class="form-group">
-              <label class="label">Tanggal Lahir</label>
-              <input type="date" name="tglLahir" class="ctrl">
-            </div>
-            <div class="form-group">
-              <label class="label">Jenis Kelamin</label>
-              <select name="jenisKelamin" class="ctrl">
-                <option value="">-- Pilih --</option>
-                <option>Laki-laki</option>
-                <option>Perempuan</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="label">Agama</label>
-              <select name="agama" class="ctrl">
-                <option value="">-- Pilih --</option>
-                <option>Islam</option><option>Kristen</option><option>Katolik</option>
-                <option>Hindu</option><option>Buddha</option><option>Konghucu</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="label">No. KK</label>
-              <input name="noKK" class="ctrl" placeholder="Nomor Kartu Keluarga">
-            </div>
-            <div class="form-group">
-              <label class="label">No. Telepon</label>
-              <input name="telp" class="ctrl" placeholder="08xxxxxxxxxx" type="tel">
-            </div>
-            <div class="form-group full">
-              <label class="label">Alamat Lengkap</label>
-              <input name="alamat" class="ctrl" placeholder="Alamat sesuai KTP">
-            </div>
-          </div>
-        </div>
-
-        <!-- Panel 2: Kepegawaian -->
-        <div id="sf-p1" class="tab-panel">
-          <div class="form-grid">
-            <div class="form-group">
-              <label class="label required">Jabatan</label>
-              <select name="jabatan" class="ctrl" required>
-                <option value="">-- Pilih Jabatan --</option>
-                <option>Kepala SPPG</option><option>Admin MBG</option><option>Ahli Gizi</option>
-                <option>Juru Masak</option><option>Asisten Juru Masak</option>
-                <option>Petugas Distribusi</option><option>Kebersihan</option>
-                <option>Keamanan</option><option>Driver</option><option>Lainnya</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="label">Pendidikan Terakhir</label>
-              <select name="pendidikan" class="ctrl">
-                <option value="">-- Pilih --</option>
-                <option>SD</option><option>SMP</option><option>SMA/SMK</option>
-                <option>D1</option><option>D2</option><option>D3</option>
-                <option>S1</option><option>S2</option><option>S3</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="label required">Tanggal Masuk</label>
-              <input type="date" name="tglMasuk" class="ctrl" required>
-            </div>
-            <div class="form-group">
-              <label class="label required">Kontrak Berakhir</label>
-              <input type="date" name="tglKontrakBerakhir" class="ctrl" required>
-            </div>
-            <div class="form-group">
-              <label class="label">Gaji Pokok (Rp)</label>
-              <input type="number" name="gaji" class="ctrl" placeholder="0" min="0" step="50000">
-            </div>
-            <div class="form-group">
-              <label class="label">Status</label>
-              <select name="status" class="ctrl">
-                <option value="Aktif">Aktif</option>
-                <option value="Nonaktif">Nonaktif</option>
-              </select>
-            </div>
-            <div class="form-group full">
-              <label class="label">Catatan</label>
-              <textarea name="catatan" class="ctrl" placeholder="Catatan tambahan..." rows="2"></textarea>
-            </div>
-          </div>
-        </div>
-      </form>
-    </div>
-    <div class="mfoot">
-      <button class="btn btn-ghost" onclick="closeModal('modal-staf')">Batal</button>
-      <button class="btn btn-ghost" onclick="switchStafTab(0)">← Kembali</button>
-      <button class="btn btn-primary" onclick="saveStaf()">💾 Simpan Data</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Detail Staf -->
-<div class="overlay" id="modal-detail">
-  <div class="modal">
-    <div class="mhead">
-      <div class="mtitle">👤 Detail Staf</div>
-      <span class="mclose" onclick="closeModal('modal-detail')">✕</span>
-    </div>
-    <div class="mbody" id="staf-detail-body"></div>
-    <div class="mfoot">
-      <button class="btn btn-ghost" onclick="closeModal('modal-detail')">Tutup</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Perpanjang Kontrak -->
-<div class="overlay" id="modal-perpanjang">
-  <div class="modal">
-    <div class="mhead">
-      <div class="mtitle">🔄 Perpanjangan Kontrak Kerja</div>
-      <span class="mclose" onclick="closeModal('modal-perpanjang')">✕</span>
-    </div>
-    <div class="mbody">
-      <div class="alert alert-info mb-3">
-        <span>ℹ️</span>
-        <span>Pastikan tanggal kontrak baru sudah sesuai sebelum menyimpan. Proses ini akan dicatat dalam riwayat perpanjangan.</span>
-      </div>
-      <div class="form-grid" style="grid-template-columns:1fr;gap:12px">
-        <div class="form-group">
-          <label class="label">Nama Staf</label>
-          <input id="pp-nama" class="ctrl" readonly>
-        </div>
-        <div class="form-group">
-          <label class="label">Jabatan</label>
-          <input id="pp-jabatan" class="ctrl" readonly>
-        </div>
-        <div class="form-group">
-          <label class="label">Kontrak Lama Berakhir</label>
-          <input type="date" id="pp-lama" class="ctrl" readonly>
-        </div>
-        <div class="form-group">
-          <label class="label">Durasi Perpanjangan</label>
-          <select id="pp-durasi" class="ctrl">
-            <option>6 Bulan</option>
-            <option selected>1 Tahun</option>
-            <option>2 Tahun</option>
-            <option>3 Tahun</option>
-            <option value="custom">Kustom</option>
+      <div class="form-group">
+        <label class="form-label">Peran / Jabatan</label>
+        <div class="input-wrap">
+          <span class="input-icon">💼</span>
+          <select id="reg-role" class="form-input" style="padding-left:40px;cursor:pointer;background:#1e293b">
+            <option value="Administrator">Administrator</option>
+            <option value="Operator SPPG" selected>Operator SPPG</option>
+            <option value="Ahli Gizi">Ahli Gizi</option>
+            <option value="Viewer">Viewer</option>
           </select>
         </div>
-        <div class="form-group">
-          <label class="label required">Kontrak Baru Berakhir</label>
-          <input type="date" id="pp-baru" class="ctrl" required>
-        </div>
-        <div class="form-group">
-          <label class="label">Catatan Perpanjangan</label>
-          <textarea id="pp-catatan" class="ctrl" rows="2" placeholder="Catatan (opsional)..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔑</span>
+          <input type="password" id="reg-pass" class="form-input" placeholder="Minimal 6 karakter">
+          <button type="button" class="eye-btn" onclick="togglePass('reg-pass', this)">👁️</button>
         </div>
       </div>
+
+      <div class="form-group">
+        <label class="form-label">Konfirmasi Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="reg-pass2" class="form-input" placeholder="Ulangi password" onkeydown="if(event.key==='Enter')doRegister()">
+          <button type="button" class="eye-btn" onclick="togglePass('reg-pass2', this)">👁️</button>
+        </div>
+      </div>
+
+      <button class="btn-submit" id="btn-reg" onclick="doRegister()">
+        <span id="btn-reg-txt">Daftarkan Akun Baru →</span>
+        <span class="spinner" id="btn-reg-spn"></span>
+      </button>
     </div>
-    <div class="mfoot">
-      <button class="btn btn-ghost" onclick="closeModal('modal-perpanjang')">Batal</button>
-      <button class="btn btn-primary" onclick="savePerpanjang()">🔄 Simpan Perpanjangan</button>
-    </div>
+
   </div>
+
+  <div class="footer-hub">
+    <a href="/">← Kembali ke Portal Hub Proyek</a>
+  </div>
+
 </div>
 
-<!-- Modal: Cetak Surat -->
-<div class="overlay" id="modal-cetak">
-  <div class="modal modal-lg">
-    <div class="mhead">
-      <div class="mtitle">🖨️ Pratinjau Surat</div>
-      <span class="mclose" onclick="closeModal('modal-cetak')">✕</span>
-    </div>
-    <div class="mbody" id="cetak-body"></div>
-    <div class="mfoot">
-      <button class="btn btn-ghost" onclick="closeModal('modal-cetak')">Tutup</button>
-      <button class="btn btn-primary" onclick="printSurat()">🖨️ Print / Simpan PDF</button>
-    </div>
-  </div>
-</div>
-
-<!-- Toast -->
-<div id="toasts"></div>
-
-<script src="assets/js/app.js"></script>
 <script>
-// Tab helper for staf form
-function switchStafTab(idx) {
-  document.querySelectorAll('#staf-form-tabs .tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
-  document.querySelectorAll('#sf-p0, #sf-p1').forEach((p,i)=>p.classList.toggle('active',i===idx));
-}
+  // ── Database akun lokal (disimpan di localStorage) ──
+  const DEFAULT_USERS = [
+    { username: 'admin', password: 'admin123', name: 'Adli Zain Pribadi', role: 'Administrator' },
+    { username: 'operator', password: 'op123', name: 'Operator SPPG', role: 'Operator' },
+    { username: 'viewer', password: 'view123', name: 'Pengawas Audit', role: 'Viewer' }
+  ];
 
-// Settings stats refresh
-function refreshSetStats() {
-  document.getElementById('set-ct-staf').textContent = DB.staf.length;
-  document.getElementById('set-ct-abs').textContent = DB.absensi.length;
-  document.getElementById('set-ct-kh').textContent = DB.kontrak_history.length;
-  if (DB.meta.createdAt) {
-    document.getElementById('set-created').textContent = new Date(DB.meta.createdAt).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
+  function getUsers() {
+    try {
+      const raw = localStorage.getItem('mbg_users');
+      if (raw) return JSON.parse(raw);
+    } catch(e) {}
+    localStorage.setItem('mbg_users', JSON.stringify(DEFAULT_USERS));
+    return DEFAULT_USERS;
   }
-}
-document.addEventListener('DOMContentLoaded', refreshSetStats);
+
+  function saveUsers(users) {
+    localStorage.setItem('mbg_users', JSON.stringify(users));
+  }
+
+  // Cek remembered user & active session (tanpa auto-redirect agar user selalu melihat pintu masuk)
+  window.addEventListener('DOMContentLoaded', () => {
+    getUsers(); // init default users
+
+    // Cek apakah ada sesi aktif sebelumnya
+    try {
+      const sess = sessionStorage.getItem('mbg_session') || localStorage.getItem('mbg_session');
+      if (sess) {
+        const parsed = JSON.parse(sess);
+        if (parsed && parsed.name) {
+          const banner = document.getElementById('banner-active-sess');
+          document.getElementById('banner-sess-name').textContent = parsed.name + ' (' + (parsed.role || 'User') + ')';
+          banner.classList.add('show');
+        }
+      }
+    } catch(e) {}
+
+    // Cek username yang diingat
+    const saved = localStorage.getItem('mbg_remembered_user');
+    if (saved) {
+      document.getElementById('login-user').value = saved;
+      document.getElementById('remember-me').checked = true;
+    }
+  });
+
+  function resumeSession() {
+    window.location.href = 'dashboard.html';
+  }
+
+  // Switch tabs
+  function setTab(tab) {
+    clearAlerts();
+    document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+    document.getElementById('tab-reg').classList.toggle('active', tab === 'reg');
+    document.getElementById('panel-login').classList.toggle('active', tab === 'login');
+    document.getElementById('panel-reg').classList.toggle('active', tab === 'reg');
+  }
+
+  function clearAlerts() {
+    document.getElementById('alert-err').classList.remove('show');
+    document.getElementById('alert-ok').classList.remove('show');
+  }
+
+  function showAlert(type, msg) {
+    clearAlerts();
+    if (type === 'err') {
+      document.getElementById('alert-err-msg').textContent = msg;
+      document.getElementById('alert-err').classList.add('show');
+    } else {
+      document.getElementById('alert-ok-msg').textContent = msg;
+      document.getElementById('alert-ok').classList.add('show');
+    }
+  }
+
+  function togglePass(id, btn) {
+    const input = document.getElementById(id);
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.textContent = '🙈';
+    } else {
+      input.type = 'password';
+      btn.textContent = '👁️';
+    }
+  }
+
+  function quickFill(user, pass) {
+    setTab('login');
+    document.getElementById('login-user').value = user;
+    document.getElementById('login-pass').value = pass;
+    document.getElementById('login-user').focus();
+    showAlert('ok', `Akun demo [${user}] siap digunakan. Klik Masuk!`);
+  }
+
+  function forgotHint() {
+    alert("💡 Petunjuk Akses Demo:\n\n1. Admin: admin / admin123\n2. Operator: operator / op123\n3. Viewer: viewer / view123\n\nAtau Anda dapat membuat akun baru melalui tab 'Registrasi'.");
+  }
+
+  // ── Handler Login ──
+  function doLogin() {
+    clearAlerts();
+    const user = document.getElementById('login-user').value.trim();
+    const pass = document.getElementById('login-pass').value;
+    const remember = document.getElementById('remember-me').checked;
+
+    if (!user || !pass) {
+      showAlert('err', 'Mohon isi username dan password!');
+      return;
+    }
+
+    const btn = document.getElementById('btn-login');
+    const txt = document.getElementById('btn-login-txt');
+    const spn = document.getElementById('btn-login-spn');
+
+    btn.classList.add('loading');
+    txt.textContent = 'Memverifikasi...';
+    spn.style.display = 'inline-block';
+
+    setTimeout(() => {
+      const users = getUsers();
+      const match = users.find(u => u.username.toLowerCase() === user.toLowerCase() && u.password === pass);
+
+      btn.classList.remove('loading');
+      txt.textContent = 'Masuk ke Dashboard →';
+      spn.style.display = 'none';
+
+      if (match) {
+        // Simpan sesi login
+        const sessionData = {
+          username: match.username,
+          name: match.name,
+          role: match.role,
+          loggedInAt: new Date().toISOString()
+        };
+        sessionStorage.setItem('mbg_session', JSON.stringify(sessionData));
+        localStorage.setItem('mbg_session', JSON.stringify(sessionData));
+
+        if (remember) {
+          localStorage.setItem('mbg_remembered_user', match.username);
+        } else {
+          localStorage.removeItem('mbg_remembered_user');
+        }
+
+        showAlert('ok', `Selamat datang, ${match.name}! Mengalihkan ke menu utama...`);
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 700);
+      } else {
+        showAlert('err', 'Username atau password salah! Silakan coba lagi.');
+        document.getElementById('login-pass').value = '';
+        document.getElementById('login-pass').focus();
+      }
+    }, 450);
+  }
+
+  // ── Handler Register ──
+  function doRegister() {
+    clearAlerts();
+    const name = document.getElementById('reg-name').value.trim();
+    const user = document.getElementById('reg-user').value.trim();
+    const role = document.getElementById('reg-role').value;
+    const pass = document.getElementById('reg-pass').value;
+    const pass2 = document.getElementById('reg-pass2').value;
+
+    if (!name || !user || !pass || !pass2) {
+      showAlert('err', 'Semua kolom registrasi wajib diisi!');
+      return;
+    }
+    if (user.length < 3) {
+      showAlert('err', 'Username minimal 3 karakter!');
+      return;
+    }
+    if (pass.length < 6) {
+      showAlert('err', 'Password minimal 6 karakter!');
+      return;
+    }
+    if (pass !== pass2) {
+      showAlert('err', 'Konfirmasi password tidak cocok!');
+      return;
+    }
+
+    const users = getUsers();
+    if (users.some(u => u.username.toLowerCase() === user.toLowerCase())) {
+      showAlert('err', 'Username sudah terdaftar! Gunakan username lain.');
+      return;
+    }
+
+    const btn = document.getElementById('btn-reg');
+    const txt = document.getElementById('btn-reg-txt');
+    const spn = document.getElementById('btn-reg-spn');
+
+    btn.classList.add('loading');
+    txt.textContent = 'Mendaftarkan...';
+    spn.style.display = 'inline-block';
+
+    setTimeout(() => {
+      users.push({
+        username: user,
+        password: pass,
+        name: name,
+        role: role
+      });
+      saveUsers(users);
+
+      btn.classList.remove('loading');
+      txt.textContent = 'Daftarkan Akun Baru →';
+      spn.style.display = 'none';
+
+      showAlert('ok', 'Registrasi berhasil! Silakan login dengan akun baru Anda.');
+      setTimeout(() => {
+        setTab('login');
+        document.getElementById('login-user').value = user;
+        document.getElementById('login-pass').value = '';
+        document.getElementById('login-pass').focus();
+      }, 1000);
+    }, 550);
+  }
 </script>
 </body>
 </html>

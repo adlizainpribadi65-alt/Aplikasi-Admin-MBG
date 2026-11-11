@@ -235,9 +235,32 @@ function updateHeaderMeta() {
   const expiring = DB.staf.filter(s=>s.status==='Aktif'&&daysUntil(s.tglKontrakBerakhir)<=30&&daysUntil(s.tglKontrakBerakhir)>=0).length;
   const badge = document.getElementById('nb-kontrak');
   if (badge) { badge.textContent = expiring; badge.style.display = expiring ? '' : 'none'; }
-  document.getElementById('h-user-name').textContent = DB.meta.adminName || 'Admin MBG';
-  document.getElementById('h-user-role').textContent = DB.meta.adminRole || 'Administrator';
-  document.getElementById('h-user-init').textContent = (DB.meta.adminName||'A').charAt(0).toUpperCase();
+  
+  let uName = DB.meta.adminName || 'Admin MBG';
+  let uRole = DB.meta.adminRole || 'Administrator';
+  try {
+    const rawSess = sessionStorage.getItem('mbg_session') || localStorage.getItem('mbg_session');
+    if (rawSess) {
+      const sess = JSON.parse(rawSess);
+      if (sess.name) uName = sess.name;
+      if (sess.role) uRole = sess.role;
+    }
+  } catch(e) {}
+
+  const elName = document.getElementById('h-user-name');
+  const elRole = document.getElementById('h-user-role');
+  const elInit = document.getElementById('h-user-init');
+  if (elName) elName.textContent = uName;
+  if (elRole) elRole.textContent = uRole;
+  if (elInit) elInit.textContent = (uName || 'A').charAt(0).toUpperCase();
+}
+
+function logoutMBG() {
+  if (confirm('Keluar dari sistem Admin MBG?')) {
+    sessionStorage.removeItem('mbg_session');
+    localStorage.removeItem('mbg_session');
+    window.location.href = 'index.html';
+  }
 }
 
 // ============================================================
