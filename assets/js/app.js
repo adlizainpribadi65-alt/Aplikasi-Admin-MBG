@@ -684,6 +684,7 @@ function renderAbsensiTable() {
       ? `<img src="${r.foto}" alt="Foto ${esc(s.nama)}" style="width:34px;height:34px;border-radius:8px;object-fit:cover;cursor:pointer;border:1px solid #cbd5e1;" onclick="previewFotoModal('${r.foto}','${esc(s.nama)}')" title="Lihat foto wajah">`
       : `<span style="font-size:.75rem;color:var(--text-subtle);">-</span>`;
 
+    const cleanJamMasuk = (r?.jamMasuk || r?.jam || '').replace('.', ':');
     return `<tr>
       <td><span class="td-id">${s.id}</span></td>
       <td>
@@ -699,7 +700,7 @@ function renderAbsensiTable() {
           ${STATUS_ABS.map(x=>`<option value="${x}" ${st===x?'selected':''}>${x}</option>`).join('')}
         </select>
       </td>
-      <td><input type="time" class="ctrl" style="width:106px;padding:4px 8px;font-size:.78rem" value="${r?.jamMasuk||''}" onchange="setAbs('${s.id}','jamMasuk',this.value)" ${disabled?'disabled':''}></td>
+      <td><input type="time" class="ctrl" style="width:106px;padding:4px 8px;font-size:.78rem" value="${cleanJamMasuk}" onchange="setAbs('${s.id}','jamMasuk',this.value)" ${disabled?'disabled':''}></td>
       <td><input type="time" class="ctrl" style="width:106px;padding:4px 8px;font-size:.78rem" value="${r?.jamKeluar||''}" onchange="setAbs('${s.id}','jamKeluar',this.value)" ${disabled?'disabled':''}></td>
       <td class="text-center">${fotoHtml}</td>
       <td><input type="text" class="ctrl" style="font-size:.78rem;padding:4px 8px" placeholder="Keterangan..." value="${esc(r?.keterangan||'')}" onchange="setAbs('${s.id}','keterangan',this.value)"></td>

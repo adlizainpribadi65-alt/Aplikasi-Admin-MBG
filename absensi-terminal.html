@@ -988,6 +988,13 @@ let currentPhotoBase64 = null;
 let mediaStream = null;
 let DB = loadDB();
 
+function nowTimeStr() {
+  const d = new Date();
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  return `${hh}:${mm}`;
+}
+
 /* ============================================================
    CLOCK
 ============================================================ */
@@ -1220,7 +1227,7 @@ function submitAbsensi() {
 
   const today  = todayStr();
   const now    = new Date();
-  const jamStr = now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+  const jamStr = nowTimeStr(); // format konsisten HH:mm agar cocok 100% dengan input time di dashboard
   const keteranganVal = document.getElementById('keterangan').value.trim();
 
   /* Remove old record if duplicate to stay sync with both ID schemes */
