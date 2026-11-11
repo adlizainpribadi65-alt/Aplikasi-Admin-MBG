@@ -1135,7 +1135,8 @@ function populateStaf() {
   aktif.forEach(s => {
     const opt = document.createElement('option');
     opt.value = s.id;
-    opt.textContent = s.nama + (s.jabatan ? ` — ${s.jabatan}` : '');
+    const tipe = s.tipePegawai ? ` [${s.tipePegawai}]` : '';
+    opt.textContent = s.nama + (s.jabatan ? ` — ${s.jabatan}` : '') + tipe;
     sel.appendChild(opt);
   });
 }

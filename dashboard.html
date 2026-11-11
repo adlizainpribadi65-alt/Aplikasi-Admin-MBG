@@ -367,6 +367,12 @@
           <option value="Aktif">Aktif</option>
           <option value="Nonaktif">Nonaktif</option>
         </select>
+        <select id="sf-tipe" class="fselect">
+          <option value="">Semua Tipe Kerja</option>
+          <option value="Kontrak">Kontrak</option>
+          <option value="Non-Kontrak">Non-Kontrak</option>
+          <option value="Relawan">Relawan</option>
+        </select>
         <button class="btn btn-excel btn-sm" onclick="exportStafExcel()">📗 Export Excel (.xlsx)</button>
         <button class="btn btn-ghost btn-sm" onclick="exportStafCSV()">📥 CSV</button>
         <button class="btn btn-primary btn-sm" onclick="openStafModal()">➕ Tambah Staf</button>
@@ -376,7 +382,7 @@
       <table class="tbl">
         <thead>
           <tr>
-            <th>ID</th><th>Nama Staf</th><th>Jabatan</th><th>Pendidikan</th>
+            <th>ID</th><th>Nama Staf</th><th>Jabatan</th><th>Tipe</th><th>Pendidikan</th>
             <th>Tgl Masuk</th><th>Kontrak Berakhir</th><th>Status Kontrak</th>
             <th>Status</th><th class="col-actions">Aksi</th>
           </tr>
@@ -560,13 +566,19 @@
           <option value="90">⏳ Perhatian (≤90 hari)</option>
           <option value="exp">📋 Sudah Berakhir</option>
         </select>
+        <select id="kf-tipe" class="fselect">
+          <option value="">Semua Tipe Kerja</option>
+          <option value="Kontrak">Kontrak</option>
+          <option value="Non-Kontrak">Non-Kontrak</option>
+          <option value="Relawan">Relawan</option>
+        </select>
       </div>
     </div>
     <div class="tbl-wrap">
       <table class="tbl">
         <thead>
           <tr>
-            <th>ID</th><th>Nama Staf</th><th>Jabatan</th>
+            <th>ID</th><th>Nama Staf</th><th>Jabatan</th><th>Tipe</th>
             <th>Tgl Masuk</th><th>Kontrak Berakhir</th>
             <th>Status Urgensi</th><th>Aksi</th>
           </tr>
@@ -1281,6 +1293,14 @@
               </select>
             </div>
             <div class="form-group">
+              <label class="label required">Tipe Pekerjaan</label>
+              <select name="tipePegawai" class="ctrl" onchange="toggleKontrakField(this.value)">
+                <option value="Kontrak">Kontrak</option>
+                <option value="Non-Kontrak">Non-Kontrak</option>
+                <option value="Relawan">Relawan</option>
+              </select>
+            </div>
+            <div class="form-group">
               <label class="label">Pendidikan Terakhir</label>
               <select name="pendidikan" class="ctrl">
                 <option value="">-- Pilih --</option>
@@ -1293,7 +1313,7 @@
               <label class="label required">Tanggal Masuk</label>
               <input type="date" name="tglMasuk" class="ctrl" required>
             </div>
-            <div class="form-group">
+            <div class="form-group" id="fg-kontrak-berakhir">
               <label class="label required">Kontrak Berakhir</label>
               <input type="date" name="tglKontrakBerakhir" class="ctrl" required>
             </div>

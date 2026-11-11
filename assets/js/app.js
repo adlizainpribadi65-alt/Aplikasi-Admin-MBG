@@ -443,8 +443,25 @@ function renderDashJabatan() {
 // ============================================================
 //  STAF MODULE
 // ============================================================
-let _stafFilters = { q:'', jabatan:'', status:'' };
+let _stafFilters = { q:'', jabatan:'', status:'', tipe:'' };
 let _editingStafId = null;
+
+function toggleKontrakField(tipe) {
+  const fg = document.getElementById('fg-kontrak-berakhir');
+  const input = fg?.querySelector('input[name="tglKontrakBerakhir"]');
+  if (tipe === 'Kontrak') {
+    if (fg) fg.style.display = 'block';
+    if (input) input.required = true;
+  } else {
+    // Non-Kontrak atau Relawan tidak wajib berakhir
+    if (fg) fg.style.display = 'none';
+    if (input) {
+      input.required = false;
+      if (!input.value) input.value = '';
+    }
+  }
+}
+window.toggleKontrakField = toggleKontrakField;
 
 function renderStaf() {
   renderStafStats();
@@ -468,20 +485,29 @@ function renderStafTable() {
   }
   if (_stafFilters.jabatan) data=data.filter(s=>s.jabatan===_stafFilters.jabatan);
   if (_stafFilters.status) data=data.filter(s=>s.status===_stafFilters.status);
+  if (_stafFilters.tipe) data=data.filter(s=>(s.tipePegawai || 'Kontrak')===_stafFilters.tipe);
 
   if (!data.length) {
-    tbody.innerHTML = `<tr><td colspan="9">${emptyHtml(!DB.staf.length?'👥':'🔍',!DB.staf.length?'Belum ada staf. Klik tombol "+ Tambah Staf" untuk memulai.':'Tidak ada hasil yang cocok.')}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10">${emptyHtml(!DB.staf.length?'👥':'🔍',!DB.staf.length?'Belum ada staf. Klik tombol "+ Tambah Staf" untuk memulai.':'Tidak ada hasil yang cocok.')}</td></tr>`;
     return;
   }
 
   tbody.innerHTML = data.map(s=>{
+    const tipe = s.tipePegawai || 'Kontrak';
     const days = daysUntil(s.tglKontrakBerakhir);
     let kb;
     if (s.status==='Nonaktif') kb=`<span class="badge bgr">Nonaktif</span>`;
+    else if (tipe === 'Non-Kontrak') kb=`<span class="badge bg">Tetap</span>`;
+    else if (tipe === 'Relawan') kb=`<span class="badge bp">Relawan</span>`;
     else if (days<0) kb=`<span class="badge br">Berakhir</span>`;
     else if (days<=30) kb=`<span class="badge br">≤30 hari</span>`;
     else if (days<=90) kb=`<span class="badge by">≤90 hari</span>`;
     else kb=`<span class="badge bg">Aktif</span>`;
+
+    let tipeBadge = `<span class="badge by">${tipe}</span>`;
+    if (tipe === 'Non-Kontrak') tipeBadge = `<span class="badge bg">${tipe}</span>`;
+    else if (tipe === 'Relawan') tipeBadge = `<span class="badge bp">${tipe}</span>`;
+
     return `<tr>
       <td><span class="td-id">${s.id}</span></td>
       <td>
@@ -494,9 +520,10 @@ function renderStafTable() {
         </div>
       </td>
       <td>${esc(s.jabatan)}</td>
+      <td>${tipeBadge}</td>
       <td>${s.pendidikan||'-'}</td>
       <td>${fmtShort(s.tglMasuk)}</td>
-      <td>${fmtShort(s.tglKontrakBerakhir)}</td>
+      <td>${tipe==='Kontrak' ? fmtShort(s.tglKontrakBerakhir) : '<span class="text-muted">—</span>'}</td>
       <td>${kb}</td>
       <td><span class="badge ${s.status==='Aktif'?'bg':'br'}">${s.status}</span></td>
       <td>
@@ -519,8 +546,12 @@ function openStafModal(id=null) {
     const s = DB.staf.find(x=>x.id===id);
     if (!s) return;
     Object.keys(s).forEach(k => { const el=f.querySelector(`[name="${k}"]`); if(el) el.value=s[k]; });
+    toggleKontrakField(s.tipePegawai || 'Kontrak');
   } else {
     f.querySelector('[name=status]').value = 'Aktif';
+    const tipeEl = f.querySelector('[name=tipePegawai]');
+    if (tipeEl) tipeEl.value = 'Kontrak';
+    toggleKontrakField('Kontrak');
   }
   openModal('modal-staf');
 }
@@ -528,16 +559,18 @@ function openStafModal(id=null) {
 function saveStaf() {
   const f = document.getElementById('f-staf');
   const v = k => f.querySelector(`[name="${k}"]`)?.value?.trim() || '';
+  const tipePegawai = v('tipePegawai') || 'Kontrak';
   const data = {
     nama: v('nama'), nik: v('nik'), jabatan: v('jabatan'),
+    tipePegawai: tipePegawai,
     tempatLahir: v('tempatLahir'), tglLahir: v('tglLahir'),
     jenisKelamin: v('jenisKelamin'), agama: v('agama'),
     pendidikan: v('pendidikan'), noKK: v('noKK'),
-    tglMasuk: v('tglMasuk'), tglKontrakBerakhir: v('tglKontrakBerakhir'),
+    tglMasuk: v('tglMasuk'), tglKontrakBerakhir: tipePegawai==='Kontrak' ? v('tglKontrakBerakhir') : '',
     gaji: parseInt(v('gaji'))||0, telp: v('telp'),
     alamat: v('alamat'), status: v('status'), catatan: v('catatan'),
   };
-  if (!data.nama||!data.jabatan||!data.tglMasuk||!data.tglKontrakBerakhir) {
+  if (!data.nama||!data.jabatan||!data.tglMasuk||(tipePegawai==='Kontrak' && !data.tglKontrakBerakhir)) {
     toast('Lengkapi field yang wajib diisi (*)','err'); return;
   }
   if (_editingStafId) {
@@ -587,6 +620,7 @@ function viewStaf(id) {
     <div id="dt-info" class="tab-panel active">
       <div class="form-grid">
         ${infoRow('🪪 NIK',s.nik||'-')}
+        ${infoRow('💼 Tipe Kerja',`<span class="badge ${s.tipePegawai==='Non-Kontrak'?'bg':s.tipePegawai==='Relawan'?'bp':'by'}">${s.tipePegawai||'Kontrak'}</span>`)}
         ${infoRow('🚻 Jenis Kelamin',s.jenisKelamin||'-')}
         ${infoRow('🗓️ Tgl Lahir',s.tglLahir?`${s.tempatLahir||''}, ${fmt(s.tglLahir)}`:'-')}
         ${infoRow('🕌 Agama',s.agama||'-')}
@@ -598,13 +632,18 @@ function viewStaf(id) {
     </div>
     <div id="dt-kontrak" class="tab-panel">
       <div class="form-grid">
+        ${infoRow('💼 Tipe Kepegawaian',s.tipePegawai||'Kontrak')}
         ${infoRow('📅 Tanggal Masuk',fmt(s.tglMasuk))}
-        ${infoRow('📋 Kontrak Berakhir',fmt(s.tglKontrakBerakhir))}
-        ${infoRow('⏳ Sisa Kontrak', days<0?`<span class="text-red font-bold">Sudah berakhir ${Math.abs(days)} hari lalu</span>`:days<=30?`<span class="text-red font-bold">${days} hari lagi</span>`:days<=90?`<span class="text-yellow font-bold">${days} hari lagi</span>`:`<span class="text-green">${days} hari lagi</span>`)}
+        ${s.tipePegawai==='Non-Kontrak'
+          ? infoRow('📋 Status Kontrak', '<span class="text-green font-bold">Pegawai Tetap (Tanpa Batas Kontrak)</span>')
+          : s.tipePegawai==='Relawan'
+            ? infoRow('📋 Status Relawan', '<span class="text-purple font-bold">Relawan / Volunteer MBG</span>')
+            : infoRow('📋 Kontrak Berakhir',fmt(s.tglKontrakBerakhir))}
+        ${(s.tipePegawai||'Kontrak')==='Kontrak' ? infoRow('⏳ Sisa Kontrak', days<0?`<span class="text-red font-bold">Sudah berakhir ${Math.abs(days)} hari lalu</span>`:days<=30?`<span class="text-red font-bold">${days} hari lagi</span>`:days<=90?`<span class="text-yellow font-bold">${days} hari lagi</span>`:`<span class="text-green">${days} hari lagi</span>`) : ''}
         ${infoRow('📝 Catatan',s.catatan||'-')}
       </div>
       <div class="mt-3 flex gap-2">
-        <button class="btn btn-primary btn-sm" onclick="closeModal('modal-detail');openPerpanjang('${id}')">🔄 Perpanjang Kontrak</button>
+        ${(s.tipePegawai||'Kontrak')==='Kontrak' ? `<button class="btn btn-primary btn-sm" onclick="closeModal('modal-detail');openPerpanjang('${id}')">🔄 Perpanjang Kontrak</button>` : ''}
         <button class="btn btn-ghost btn-sm" onclick="cetakSurat('${id}')">🖨️ Cetak Surat</button>
       </div>
     </div>
@@ -920,37 +959,51 @@ function renderKontrak() {
 }
 
 function renderKontrakStats() {
-  const aktif = DB.staf.filter(s=>s.status==='Aktif');
-  set('ks-7', aktif.filter(s=>daysUntil(s.tglKontrakBerakhir)<=7&&daysUntil(s.tglKontrakBerakhir)>=0).length);
-  set('ks-30', aktif.filter(s=>daysUntil(s.tglKontrakBerakhir)<=30&&daysUntil(s.tglKontrakBerakhir)>=0).length);
-  set('ks-90', aktif.filter(s=>daysUntil(s.tglKontrakBerakhir)<=90&&daysUntil(s.tglKontrakBerakhir)>=0).length);
-  set('ks-exp', DB.staf.filter(s=>daysUntil(s.tglKontrakBerakhir)<0).length);
+  const aktifKontrak = DB.staf.filter(s=>s.status==='Aktif' && (s.tipePegawai||'Kontrak')==='Kontrak');
+  set('ks-7', aktifKontrak.filter(s=>daysUntil(s.tglKontrakBerakhir)<=7&&daysUntil(s.tglKontrakBerakhir)>=0).length);
+  set('ks-30', aktifKontrak.filter(s=>daysUntil(s.tglKontrakBerakhir)<=30&&daysUntil(s.tglKontrakBerakhir)>=0).length);
+  set('ks-90', aktifKontrak.filter(s=>daysUntil(s.tglKontrakBerakhir)<=90&&daysUntil(s.tglKontrakBerakhir)>=0).length);
+  set('ks-exp', aktifKontrak.filter(s=>daysUntil(s.tglKontrakBerakhir)<0).length);
 }
 
 function renderKontrakTable() {
   const filter = document.getElementById('kf-select')?.value||'all';
+  const tipeFilter = document.getElementById('kf-tipe')?.value||'';
   let data = [...DB.staf];
   if (filter==='7') data=data.filter(s=>s.status==='Aktif'&&daysUntil(s.tglKontrakBerakhir)<=7&&daysUntil(s.tglKontrakBerakhir)>=0);
   else if (filter==='30') data=data.filter(s=>s.status==='Aktif'&&daysUntil(s.tglKontrakBerakhir)<=30&&daysUntil(s.tglKontrakBerakhir)>=0);
   else if (filter==='90') data=data.filter(s=>s.status==='Aktif'&&daysUntil(s.tglKontrakBerakhir)<=90&&daysUntil(s.tglKontrakBerakhir)>=0);
   else if (filter==='exp') data=data.filter(s=>daysUntil(s.tglKontrakBerakhir)<0);
   else data=data.filter(s=>s.status==='Aktif');
+
+  if (tipeFilter) data=data.filter(s=>(s.tipePegawai||'Kontrak')===tipeFilter);
+
   data.sort((a,b)=>daysUntil(a.tglKontrakBerakhir)-daysUntil(b.tglKontrakBerakhir));
 
   const tbody = document.getElementById('kontrak-tbody');
   if (!data.length) {
-    tbody.innerHTML=`<tr><td colspan="7">${emptyHtml('✅','Tidak ada kontrak dalam kategori ini')}</td></tr>`; return;
+    tbody.innerHTML=`<tr><td colspan="8">${emptyHtml('✅','Tidak ada data pegawai dalam kategori ini')}</td></tr>`; return;
   }
   tbody.innerHTML = data.map(s=>{
+    const tipe = s.tipePegawai || 'Kontrak';
     const d=daysUntil(s.tglKontrakBerakhir);
     let badge;
-    if (d<0) badge=`<span class="badge br">Sudah Berakhir</span>`;
+    if (tipe === 'Non-Kontrak') badge=`<span class="badge bg">Tetap</span>`;
+    else if (tipe === 'Relawan') badge=`<span class="badge bp">Relawan</span>`;
+    else if (d<0) badge=`<span class="badge br">Sudah Berakhir</span>`;
     else if (d<=7) badge=`<span class="badge br">🚨 Kritis (${d} hari)</span>`;
     else if (d<=30) badge=`<span class="badge br">⚠️ Mendesak (${d} hari)</span>`;
     else if (d<=90) badge=`<span class="badge by">⏳ Perhatian (${d} hari)</span>`;
     else badge=`<span class="badge bg">✅ Aman</span>`;
-    const tgl1=new Date(s.tglMasuk+'T00:00:00'),tgl2=new Date(s.tglKontrakBerakhir+'T00:00:00');
-    const tahun=Math.round((tgl2-tgl1)/(365*86400000)*10)/10;
+
+    let tipeBadge = `<span class="badge by">${tipe}</span>`;
+    if (tipe === 'Non-Kontrak') tipeBadge = `<span class="badge bg">${tipe}</span>`;
+    else if (tipe === 'Relawan') tipeBadge = `<span class="badge bp">${tipe}</span>`;
+
+    const btnPerpanjang = tipe === 'Kontrak'
+      ? `<button class="btn btn-primary btn-xs" onclick="openPerpanjang('${s.id}')">🔄 Perpanjang</button>`
+      : '';
+
     return `<tr>
       <td><span class="td-id">${s.id}</span></td>
       <td>
@@ -960,12 +1013,13 @@ function renderKontrakTable() {
         </div>
       </td>
       <td class="text-sm">${esc(s.jabatan)}</td>
+      <td>${tipeBadge}</td>
       <td class="text-sm">${fmtShort(s.tglMasuk)}</td>
-      <td class="text-sm">${fmtShort(s.tglKontrakBerakhir)}</td>
+      <td class="text-sm">${tipe==='Kontrak' ? fmtShort(s.tglKontrakBerakhir) : '<span class="text-muted">—</span>'}</td>
       <td>${badge}</td>
       <td>
         <div class="flex gap-1">
-          <button class="btn btn-primary btn-xs" onclick="openPerpanjang('${s.id}')">🔄 Perpanjang</button>
+          ${btnPerpanjang}
           <button class="btn btn-ghost btn-xs" onclick="cetakSurat('${s.id}')">🖨️ Cetak</button>
         </div>
       </td>
@@ -1863,6 +1917,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('sf-q')?.addEventListener('input',e=>{ _stafFilters.q=e.target.value; renderStafTable(); });
   document.getElementById('sf-jab')?.addEventListener('change',e=>{ _stafFilters.jabatan=e.target.value; renderStafTable(); });
   document.getElementById('sf-status')?.addEventListener('change',e=>{ _stafFilters.status=e.target.value; renderStafTable(); });
+  document.getElementById('sf-tipe')?.addEventListener('change',e=>{ _stafFilters.tipe=e.target.value; renderStafTable(); });
 
   // Absensi date
   document.getElementById('abs-date')?.addEventListener('change',e=>{ _absDate=e.target.value; renderAbsensiTable(); });
@@ -1872,6 +1927,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Kontrak filter
   document.getElementById('kf-select')?.addEventListener('change',()=>renderKontrakTable());
+  document.getElementById('kf-tipe')?.addEventListener('change',()=>renderKontrakTable());
 
   // Perpanjang durasi
   document.getElementById('pp-durasi')?.addEventListener('change',hitungDurasiPerpanjang);
