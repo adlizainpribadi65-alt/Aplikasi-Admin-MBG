@@ -817,9 +817,9 @@
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
       </svg>
-      Verifikasi Foto Wajah
+      Face Memory Scanner & Jadwal Otomatis
     </div>
-    <div class="card-desc">Ambil foto selfie langsung untuk bukti kehadiran yang valid.</div>
+    <div class="card-desc">Sistem memori wajah akan mencocokkan wajah Anda secara otomatis dan menghitung jadwal kerja real-time.</div>
 
     <div class="camera-container">
       <div id="cam-placeholder" class="camera-placeholder">
@@ -912,6 +912,10 @@
       <div class="info-row">
         <span class="info-label">Jam</span>
         <span class="info-value" id="s-jam">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Jadwal Shift</span>
+        <span class="info-value" id="s-shift" style="color:var(--accent-blue)">—</span>
       </div>
       <div class="info-row">
         <span class="info-label">Status</span>
@@ -1039,7 +1043,29 @@ function playSuccessChime() {
 }
 
 /* ============================================================
-   CLOCK
+   FACE MEMORY & SCHEDULE MATCHING
+============================================================ */
+function calculateShiftStatus(jadwalStr, currentTimeStr) {
+  // Jadwal standar format: e.g. "Reguler (07:30 - 16:00)"
+  let targetHour = 7, targetMin = 30;
+  const match = (jadwalStr || '').match(/(\d{2}):(\d{2})/);
+  if (match) {
+    targetHour = parseInt(match[1], 10);
+    targetMin = parseInt(match[2], 10);
+  }
+
+  const [curH, curM] = currentTimeStr.split(':').map(Number);
+  const targetMinutes = targetHour * 60 + targetMin;
+  const currentMinutes = curH * 60 + curM;
+
+  // Toleransi 10 menit
+  if (currentMinutes <= targetMinutes + 10) {
+    return { status: 'Hadir', note: 'Tepat Waktu' };
+  } else {
+    const diff = currentMinutes - targetMinutes;
+    return { status: 'Terlambat', note: `Terlambat ${diff} menit (Jadwal: ${String(targetHour).padStart(2,'0')}:${String(targetMin).padStart(2,'0')})` };
+  }
+}
 ============================================================ */
 const DAYS_ID = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
@@ -1278,19 +1304,38 @@ function submitAbsensi() {
   const recId = `${staf.id}|${today}`;
   DB.absensi = DB.absensi.filter(a => !( (a.stafId === selectedStafId || a.id === recId) && a.tanggal === today ));
 
+  // Smart schedule adjustment: Jika user memilih hadir tapi lewat jam shift, sesuaikan otomatis
+  let finalStatus = selectedStatus;
+  let finalKet = keteranganVal;
+  const shift = staf.jadwalShift || 'Reguler (07:30 - 16:00)';
+
+  if (selectedStatus === 'Hadir' || selectedStatus === 'Terlambat') {
+    const calc = calculateShiftStatus(shift, jamStr);
+    finalStatus = calc.status;
+    if (!finalKet) finalKet = calc.note;
+  }
+
   const record = {
     id:         recId,
     stafId:     staf.id,
     nama:       staf.nama,
     jabatan:    staf.jabatan || '',
+    jadwalShift: shift,
     tanggal:    today,
-    status:     selectedStatus,
-    keterangan: keteranganVal,
+    status:     finalStatus,
+    keterangan: finalKet,
     jam:        jamStr,
     jamMasuk:   jamStr,
     jamKeluar:  '',
     foto:       currentPhotoBase64 || '' // simpan foto wajah staf
   };
+
+  // Simpan foto ke memori staf jika staf belum memiliki foto master
+  if (currentPhotoBase64 && !staf.fotoMaster) {
+    staf.fotoMaster = currentPhotoBase64;
+    const stafIdx = DB.staf.findIndex(s => s.id === staf.id);
+    if (stafIdx !== -1) DB.staf[stafIdx].fotoMaster = currentPhotoBase64;
+  }
 
   DB.absensi.push(record);
   saveDB(DB);
@@ -1319,12 +1364,13 @@ function submitAbsensi() {
   document.getElementById('s-tanggal').textContent  =
     `${now.getDate()} ${MONTHS_ID[now.getMonth()]} ${now.getFullYear()}`;
   document.getElementById('s-jam').textContent      = jamStr;
+  document.getElementById('s-shift').textContent    = shift;
   document.getElementById('s-status').innerHTML =
-    `<span class="badge-status badge-${selectedStatus}">${selectedStatus}</span>`;
+    `<span class="badge-status badge-${finalStatus}">${finalStatus}</span>`;
 
   const ketRow = document.getElementById('s-ket-row');
-  if (keteranganVal) {
-    document.getElementById('s-keterangan').textContent = keteranganVal;
+  if (finalKet) {
+    document.getElementById('s-keterangan').textContent = finalKet;
     ketRow.style.display = '';
   } else {
     ketRow.style.display = 'none';

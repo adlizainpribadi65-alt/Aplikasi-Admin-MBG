@@ -1318,6 +1318,15 @@
               <input type="date" name="tglKontrakBerakhir" class="ctrl" required>
             </div>
             <div class="form-group">
+              <label class="label">Jadwal Shift Kerja</label>
+              <select name="jadwalShift" class="ctrl">
+                <option value="Reguler (07:30 - 16:00)" selected>Reguler (07:30 - 16:00)</option>
+                <option value="Shift Pagi / Dapur (06:00 - 14:00)">Shift Pagi / Dapur (06:00 - 14:00)</option>
+                <option value="Shift Distribusi (08:30 - 17:00)">Shift Distribusi (08:30 - 17:00)</option>
+                <option value="Shift Siang (12:00 - 20:00)">Shift Siang (12:00 - 20:00)</option>
+              </select>
+            </div>
+            <div class="form-group">
               <label class="label">Gaji Pokok (Rp)</label>
               <input type="number" name="gaji" class="ctrl" placeholder="0" min="0" step="50000">
             </div>

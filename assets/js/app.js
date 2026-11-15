@@ -560,9 +560,11 @@ function saveStaf() {
   const f = document.getElementById('f-staf');
   const v = k => f.querySelector(`[name="${k}"]`)?.value?.trim() || '';
   const tipePegawai = v('tipePegawai') || 'Kontrak';
+  const jadwalShift = v('jadwalShift') || 'Reguler (07:30 - 16:00)';
   const data = {
     nama: v('nama'), nik: v('nik'), jabatan: v('jabatan'),
     tipePegawai: tipePegawai,
+    jadwalShift: jadwalShift,
     tempatLahir: v('tempatLahir'), tglLahir: v('tglLahir'),
     jenisKelamin: v('jenisKelamin'), agama: v('agama'),
     pendidikan: v('pendidikan'), noKK: v('noKK'),
@@ -621,6 +623,7 @@ function viewStaf(id) {
       <div class="form-grid">
         ${infoRow('🪪 NIK', s.nik || '-')}
         ${infoRow('💼 Tipe Kerja', `<span class="badge ${s.tipePegawai === 'Non-Kontrak' ? 'bg' : s.tipePegawai === 'Relawan' ? 'bp' : 'by'}">${s.tipePegawai || 'Kontrak'}</span>`)}
+        ${infoRow('⏰ Jadwal Shift', `<span class="badge bg">${s.jadwalShift || 'Reguler (07:30 - 16:00)'}</span>`)}
         ${infoRow('🚻 Jenis Kelamin', s.jenisKelamin || '-')}
         ${infoRow('🗓️ Tgl Lahir', s.tglLahir ? `${s.tempatLahir || ''}, ${fmt(s.tglLahir)}` : '-')}
         ${infoRow('🕌 Agama', s.agama || '-')}
