@@ -1172,3 +1172,61 @@ textarea.ctrl { resize: vertical; min-height: 80px; }
   .sidebar, .header, .btn, .toolbar, .overlay, .hbtn { display: none !important; }
   .main { border-radius: 0 !important; }
 }
+
+/* =====================================================
+   PRO GLASSMORPHISM & MICRO-INTERACTIONS
+   ===================================================== */
+
+/* Smooth Card Hover Lift & Glow */
+.card {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card:hover {
+  box-shadow: 0 10px 30px -8px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+/* Glassmorphism Header & Pill */
+.header {
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
+}
+
+.user-pill {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.user-pill:hover {
+  background: #f1f5f9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+/* Shimmer Loading Skeleton Effect */
+@keyframes skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton-loading {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+  border-radius: 6px;
+}
+
+/* Interactive Button Ripple/Press feedback */
+.btn {
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.btn:active {
+  transform: scale(0.96) !important;
+}
+
+/* Pastel Cards Polish */
+.pastel-card {
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.pastel-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px -6px rgba(15, 23, 42, 0.08);
+}

@@ -122,11 +122,17 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: var(--surface-card);
-      border: 1px solid var(--border-light);
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(226, 232, 240, 0.85);
       border-radius: var(--radius-lg);
       padding: 14px 20px;
-      box-shadow: var(--shadow-card);
+      box-shadow: 0 8px 24px -6px rgba(15, 23, 42, 0.08);
+      transition: all 0.2s;
+    }
+    .clock-pill:hover {
+      box-shadow: 0 12px 30px -8px rgba(15, 23, 42, 0.12);
     }
 
     .clock-left { display: flex; flex-direction: column; gap: 2px; }
@@ -178,14 +184,20 @@
     }
 
     /* ============================================================ */
-    /*  MAIN CARD                                                    */
+    /*  MAIN CARD & GLASSMORPHISM                                    */
     /* ============================================================ */
     .card {
-      background: var(--surface-card);
-      border: 1px solid var(--border-light);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(16px) saturate(160%);
+      -webkit-backdrop-filter: blur(16px) saturate(160%);
+      border: 1px solid rgba(226, 232, 240, 0.85);
       border-radius: var(--radius-xl);
       padding: 24px 22px;
-      box-shadow: var(--shadow-card);
+      box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.03);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .card:hover {
+      box-shadow: 0 16px 36px -10px rgba(15, 23, 42, 0.12);
     }
 
     .card-title {
@@ -996,6 +1008,37 @@ function nowTimeStr() {
 }
 
 /* ============================================================
+   AUDIO FEEDBACK & HAPTICS (PRO MICRO-INTERACTIONS)
+============================================================ */
+function playSuccessChime() {
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = 'sine';
+    // Melodi dua nada elegan (D5 -> G5)
+    osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+    osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.12); // G5
+
+    gain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.18, audioCtx.currentTime + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.45);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.5);
+  } catch(e) {}
+
+  // Haptic feedback jika didukung device mobile
+  if (navigator.vibrate) {
+    navigator.vibrate([40, 60, 80]);
+  }
+}
+
+/* ============================================================
    CLOCK
 ============================================================ */
 const DAYS_ID = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
@@ -1290,6 +1333,7 @@ function submitAbsensi() {
   document.getElementById('success-subtitle').textContent =
     `Kehadiran ${staf.nama} telah berhasil diverifikasi pada ${jamStr}.`;
 
+  playSuccessChime(); // Bunyikan nada sukses & haptics pro
   showToast('Absensi wajah berhasil dicatat!');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
