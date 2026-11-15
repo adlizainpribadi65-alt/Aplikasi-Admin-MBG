@@ -33,7 +33,56 @@ function loadDB() {
 
 function saveDB() {
   localStorage.setItem(STORE_KEY, JSON.stringify(DB));
+  syncDBToCloud();
 }
+
+const CLOUD_DATA_URL = 'https://admin-mbg-sppg-default-rtdb.asia-southeast1.firebasedatabase.app/mbg_v2.json';
+let _cloudSyncDebounce = null;
+function syncDBToCloud() {
+  clearTimeout(_cloudSyncDebounce);
+  _cloudSyncDebounce = setTimeout(() => {
+    try {
+      fetch(CLOUD_DATA_URL, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(DB)
+      }).catch(() => {});
+    } catch(e) {}
+  }, 800);
+}
+
+// Background sync from cloud on startup
+async function fetchCloudDB() {
+  try {
+    const res = await fetch(CLOUD_DATA_URL, { cache: 'no-store' });
+    if (res.ok) {
+      const cloud = await res.json();
+      if (cloud && Array.isArray(cloud.staf) && cloud.staf.length > 0) {
+        // Merge cloud with local
+        const mergedStaf = [...cloud.staf];
+        DB.staf.forEach(ls => {
+          if (!mergedStaf.some(cs => cs.id === ls.id)) mergedStaf.push(ls);
+        });
+        DB.staf = mergedStaf;
+
+        if (Array.isArray(cloud.absensi)) {
+          const mergedAbs = [...cloud.absensi];
+          DB.absensi.forEach(la => {
+            if (!mergedAbs.some(ca => ca.id === la.id)) mergedAbs.push(la);
+          });
+          DB.absensi = mergedAbs;
+        }
+
+        localStorage.setItem(STORE_KEY, JSON.stringify(DB));
+        if (typeof renderStaf === 'function') renderStaf();
+        if (typeof renderAbsensiTable === 'function') renderAbsensiTable();
+      } else if (DB.staf.length > 0) {
+        syncDBToCloud();
+      }
+    }
+  } catch(e) {}
+}
+fetchCloudDB();
 
 let DB = loadDB();
 

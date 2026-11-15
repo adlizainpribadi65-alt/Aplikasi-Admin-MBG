@@ -384,7 +384,12 @@
         </svg>
       </div>
 
-      <div class="brand-badge">Sistem Kepegawaian SPPG</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
+        <div class="brand-badge" style="margin-bottom:0;">Sistem Kepegawaian SPPG</div>
+        <div id="cloud-sync-badge" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#059669;background:rgba(16,185,129,0.1);padding:3px 10px;border-radius:99px;">
+          <span style="width:6px;height:6px;border-radius:50%;background:#10b981;box-shadow:0 0 6px #10b981;"></span> Cloud Global Online
+        </div>
+      </div>
       <h1 class="brand-title">Admin MBG</h1>
       <p class="brand-subtitle">Administrasi Kepegawaian & Pengelolaan Data Excel</p>
     </div>
@@ -563,7 +568,8 @@
     { username: 'viewer', password: 'view123', name: 'Pengawas Audit', role: 'Viewer' }
   ];
 
-  // ── Sinkronisasi Akun Server & Lokal ──
+  // ── Multi-Tier Cloud Sync & Server Database ──
+  const CLOUD_SYNC_USERS_URL = 'https://admin-mbg-sppg-default-rtdb.asia-southeast1.firebasedatabase.app/users.json';
   const API_USERS_URL = 'api-users.php';
 
   function getUsers() {
@@ -579,27 +585,71 @@
     localStorage.setItem('mbg_users', JSON.stringify(users));
   }
 
-  // Sinkronisasi akun dari server jika tersedia (agar device HP/laptop lain mendapatkan akun yang sama)
+  function updateCloudSyncBadge(status, text) {
+    const el = document.getElementById('cloud-sync-badge');
+    if (!el) return;
+    if (status === 'cloud') {
+      el.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:#10b981;box-shadow:0 0 6px #10b981;"></span> Cloud Global Online 🌐';
+      el.style.color = '#059669';
+    } else if (status === 'local') {
+      el.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:#0284c7;"></span> Server Lokal XAMPP 💻';
+      el.style.color = '#0284c7';
+    } else {
+      el.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:#94a3b8;"></span> Mode Offline 📱';
+      el.style.color = '#64748b';
+    }
+    if (text) el.title = text;
+  }
+
+  // Sinkronisasi akun otomatis dari Cloud Google & Server Lokal
   async function syncUsersFromServer() {
+    let cloudOk = false;
+
+    // 1. Ambil dari Google Cloud Database (Online Global - Akses dari HP, Kuota, Luar Kantor)
+    try {
+      const cResp = await fetch(CLOUD_SYNC_USERS_URL, { cache: 'no-store' });
+      if (cResp.ok) {
+        const cData = await cResp.json();
+        if (cData) {
+          const cloudList = Array.isArray(cData) ? cData : Object.values(cData);
+          const localList = getUsers();
+          const merged = [...cloudList];
+          localList.forEach(lu => {
+            if (!merged.some(cu => cu.username.toLowerCase() === lu.username.toLowerCase())) {
+              merged.push(lu);
+            }
+          });
+          saveUsers(merged);
+          cloudOk = true;
+          updateCloudSyncBadge('cloud', 'Sinkronisasi Cloud Global Aktif');
+        }
+      }
+    } catch(e) {
+      // Offline fallback
+    }
+
+    // 2. Sinkron dengan Server XAMPP jika sedang terhubung
     try {
       const resp = await fetch(API_USERS_URL, { cache: 'no-store' });
       if (resp.ok) {
         const json = await resp.json();
         if (json.status === 'success' && Array.isArray(json.data)) {
-          const localUsers = getUsers();
+          const current = getUsers();
           const merged = [...json.data];
-          // Tambahkan akun lokal yang belum ada di server jika ada
-          localUsers.forEach(lu => {
+          current.forEach(lu => {
             if (!merged.some(su => su.username.toLowerCase() === lu.username.toLowerCase())) {
               merged.push(lu);
             }
           });
           saveUsers(merged);
+          if (!cloudOk) updateCloudSyncBadge('local', 'Terhubung ke XAMPP Lokal');
           return merged;
         }
       }
-    } catch(e) {
-      // Offline fallback: tetap berjalan dengan localStorage
+    } catch(e) {}
+
+    if (!cloudOk) {
+      updateCloudSyncBadge('offline', 'Menggunakan akun tersimpan');
     }
     return getUsers();
   }
@@ -782,30 +832,37 @@
       username: user,
       password: pass,
       name: name,
-      role: role
+      role: role,
+      createdAt: new Date().toISOString()
     };
 
-    // Kirim ke server (api-users.php) agar tersimpan secara permanen untuk semua device
-    fetch(API_USERS_URL, {
+    // 1. Simpan langsung ke cache lokal
+    const currentUsers = getUsers();
+    if (!currentUsers.some(u => u.username.toLowerCase() === user.toLowerCase())) {
+      currentUsers.push(newUserData);
+      saveUsers(currentUsers);
+    }
+
+    // 2. Kirim ke Google Cloud Database (Global agar HP lain di mana saja langsung bisa login)
+    const cloudPromise = fetch(`https://admin-mbg-sppg-default-rtdb.asia-southeast1.firebasedatabase.app/users/${encodeURIComponent(user.toLowerCase())}.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newUserData)
+    }).catch(() => null);
+
+    // 3. Kirim ke server lokal XAMPP api-users.php (jika ada)
+    const localPromise = fetch(API_USERS_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newUserData)
-    })
-    .then(r => r.json())
-    .catch(() => null)
-    .finally(() => {
-      // Simpan juga ke cache lokal
-      const currentUsers = getUsers();
-      if (!currentUsers.some(u => u.username.toLowerCase() === user.toLowerCase())) {
-        currentUsers.push(newUserData);
-        saveUsers(currentUsers);
-      }
+    }).catch(() => null);
 
+    Promise.allSettled([cloudPromise, localPromise]).then(() => {
       btn.classList.remove('loading');
       txt.textContent = 'Daftarkan Akun Baru →';
       spn.style.display = 'none';
 
-      showAlert('ok', 'Registrasi berhasil! Akun tersimpan dan dapat digunakan di semua perangkat.');
+      showAlert('ok', 'Registrasi berhasil! Akun tersimpan di Cloud & langsung dapat digunakan di HP atau perangkat lain 🌐');
       setTimeout(() => {
         setTab('login');
         document.getElementById('login-user').value = user;

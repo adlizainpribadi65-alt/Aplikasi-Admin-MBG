@@ -1207,7 +1207,30 @@ function loadDB() {
 
 function saveDB(db) {
   localStorage.setItem(STORE_KEY, JSON.stringify(db));
+  try {
+    fetch('https://admin-mbg-sppg-default-rtdb.asia-southeast1.firebasedatabase.app/mbg_v2.json', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(db)
+    }).catch(() => {});
+  } catch(e) {}
 }
+
+async function syncTerminalFromCloud() {
+  try {
+    const res = await fetch('https://admin-mbg-sppg-default-rtdb.asia-southeast1.firebasedatabase.app/mbg_v2.json', { cache: 'no-store' });
+    if (res.ok) {
+      const cloud = await res.json();
+      if (cloud && Array.isArray(cloud.staf) && cloud.staf.length > 0) {
+        DB = cloud;
+        localStorage.setItem(STORE_KEY, JSON.stringify(DB));
+        populateStaf();
+        loadStaffFaceDescriptors();
+      }
+    }
+  } catch(e) {}
+}
+syncTerminalFromCloud();
 
 function todayStr() {
   return new Date().toISOString().slice(0,10);
