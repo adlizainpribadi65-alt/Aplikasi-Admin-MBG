@@ -336,21 +336,31 @@
     .status-btn.active[data-s="Alpha"]     .s-check { background: var(--accent-red); }
 
     /* ============================================================ */
-    /*  CAMERA PREVIEW & PHOTO CAPTURE                               */
+    /*  CAMERA PREVIEW & AI SCANNER                                  */
     /* ============================================================ */
     .camera-container {
       position: relative;
       width: 100%;
-      height: 240px;
-      background: #0f172a;
-      border-radius: var(--radius-md);
+      height: 280px;
+      background: #0b1120;
+      border-radius: var(--radius-lg);
       overflow: hidden;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.1) inset;
+      box-shadow: 0 8px 30px rgba(15,23,42,0.12);
       margin-bottom: 12px;
+      border: 2px solid var(--border-light);
+      transition: all 0.3s;
+    }
+    .camera-container.scanning {
+      border-color: #38bdf8;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
+    }
+    .camera-container.detected {
+      border-color: #059669;
+      box-shadow: 0 0 25px rgba(5, 150, 105, 0.45);
     }
     #camera-video, #photo-preview {
       width: 100%;
@@ -363,13 +373,64 @@
     }
     .camera-overlay-frame {
       position: absolute;
-      inset: 16px;
-      border: 2px dashed rgba(255,255,255,0.45);
-      border-radius: 16px;
+      inset: 0;
       pointer-events: none;
       display: flex;
       align-items: center;
       justify-content: center;
+      z-index: 1;
+    }
+    .face-target-oval {
+      width: 160px;
+      height: 200px;
+      border: 2px dashed rgba(255,255,255,0.7);
+      border-radius: 50% 50% 45% 45%;
+      box-shadow: 0 0 0 9999px rgba(15,23,42,0.35);
+      position: relative;
+      transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .face-target-oval.locked {
+      border-color: #10b981;
+      border-style: solid;
+      border-width: 3.5px;
+      box-shadow: 0 0 30px rgba(16,185,129,0.85), 0 0 0 9999px rgba(15,23,42,0.4);
+      transform: scale(1.05);
+    }
+    .scan-laser-bar {
+      position: absolute;
+      left: 8%;
+      right: 8%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #38bdf8, #0284c7, #38bdf8, transparent);
+      box-shadow: 0 0 10px #38bdf8, 0 0 20px #0284c7;
+      animation: laserSweep 2s ease-in-out infinite alternate;
+      border-radius: 99px;
+    }
+    @keyframes laserSweep {
+      0% { top: 12%; opacity: 0.2; }
+      50% { opacity: 1; }
+      100% { top: 88%; opacity: 0.2; }
+    }
+    .scanner-live-pill {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.78);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 99px;
+      font-size: 11.5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid rgba(255,255,255,0.18);
+      z-index: 2;
+      transition: all 0.3s;
+      white-space: nowrap;
     }
     .camera-placeholder {
       display: flex;
@@ -401,6 +462,7 @@
       display: flex;
       gap: 8px;
       justify-content: center;
+      flex-wrap: wrap;
     }
 
     /* ============================================================ */
@@ -767,15 +829,133 @@
     </div>
   </div>
 
-  <!-- ===== FORM CARD ===== -->
+  <!-- ===== FOTO WAJAH CARD (SCANNER UTAMA) ===== -->
+  <div class="card" id="camera-card" style="padding:18px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div class="card-title" style="margin-bottom:0;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+        </svg>
+        AI Face Scanner Otomatis
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:11px;font-weight:700;color:var(--accent-blue);">Auto-Scan</span>
+        <label style="position:relative;display:inline-block;width:34px;height:20px;">
+          <input type="checkbox" id="chk-autoscan" checked onchange="toggleAutoScan(this.checked)" style="opacity:0;width:0;height:0;">
+          <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#059669;transition:.3s;border-radius:34px;" id="autoscan-slider"></span>
+        </label>
+      </div>
+    </div>
+    <div class="card-desc" style="margin-bottom:12px;">Posisikan wajah Anda di dalam lingkaran. Sistem otomatis mengenali wajah dan mencatat kehadiran tanpa sentuh tombol.</div>
+
+    <div class="camera-container" id="camera-box">
+      <!-- Live Pill Info -->
+      <div id="scanner-pill" class="scanner-live-pill">
+        <span id="scanner-dot" style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block;box-shadow:0 0 8px #10b981;"></span>
+        <span id="scanner-status-text">Siaga: Arahkan Wajah</span>
+      </div>
+
+      <div id="cam-placeholder" class="camera-placeholder">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+        </svg>
+        <div style="font-size:13px;font-weight:600;color:var(--text-main);">Kamera Siaga</div>
+        <div style="font-size:11.5px;color:#94a3b8;max-width:240px;">Klik tombol di bawah untuk membuka kamera dan mengaktifkan scanner otomatis.</div>
+      </div>
+
+      <video id="camera-video" playsinline autoplay muted style="display:none;"></video>
+      <img id="photo-preview" alt="Foto Wajah">
+      
+      <div id="camera-overlay" class="camera-overlay-frame" style="display:none;">
+        <div id="face-target" class="face-target-oval">
+          <div class="scan-laser-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden canvas for capturing frame -->
+    <canvas id="photo-canvas" style="display:none;"></canvas>
+
+    <div class="cam-btn-group">
+      <button type="button" class="btn-cam-action" id="btn-start-cam" onclick="startCamera()" style="background:var(--primary);color:#fff;border-color:var(--primary);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="5 3 19 12 5 21 5 3"/>
+        </svg>
+        Aktifkan Scanner Kamera
+      </button>
+      <button type="button" class="btn-cam-action" id="btn-scan-now" onclick="triggerManualScan()" style="display:none;background:#0284c7;color:#fff;border-color:#0284c7;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        Scan Sekarang
+      </button>
+      <button type="button" class="btn-cam-action" id="btn-snap-cam" onclick="takeSnapshot()" style="display:none;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+        </svg>
+        Jepret Foto
+      </button>
+      <button type="button" class="btn-cam-action" id="btn-retake-cam" onclick="retakePhoto()" style="display:none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3"/>
+        </svg>
+        Scan Ulang
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== MATCH DETECTED CARD (POPUP HASIL DETEKSI OTOMATIS) ===== -->
+  <div class="card" id="match-card" style="display:none;background:linear-gradient(135deg,#f0fdf4,#ffffff);border:2px solid #86efac;padding:16px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="position:relative;width:56px;height:56px;flex-shrink:0;">
+        <img id="m-foto" src="" style="width:100%;height:100%;border-radius:14px;object-fit:cover;border:2px solid #059669;" alt="Wajah Cocok">
+        <div style="position:absolute;bottom:-4px;right:-4px;background:#059669;color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border:2px solid #fff;">✓</div>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:11px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:0.5px;">🎯 Wajah Dikenali (<span id="m-score">94%</span>)</div>
+        <div style="font-size:16px;font-weight:800;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="m-nama">—</div>
+        <div style="font-size:12px;color:var(--text-muted);" id="m-sub">—</div>
+      </div>
+    </div>
+    
+    <div style="margin-top:12px;padding:10px 12px;background:#fff;border-radius:10px;border:1px solid #dcfce7;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);" id="m-mode-label">Tipe Presensi & Shift</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text-main);" id="m-shift-status">—</div>
+      </div>
+      <span class="badge-status badge-Hadir" id="m-badge">Hadir</span>
+    </div>
+
+    <!-- Countdown auto-submit bar -->
+    <div id="countdown-wrap" style="margin-top:12px;">
+      <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-muted);margin-bottom:4px;">
+        <span>Otomatis tersimpan dalam <b id="countdown-sec" style="color:var(--accent-green);font-size:13px;">2</b>s...</span>
+        <a href="javascript:void(0)" onclick="cancelAutoSubmit()" style="color:var(--accent-red);font-weight:600;text-decoration:none;">Batal</a>
+      </div>
+      <div style="width:100%;height:6px;background:#e2e8f0;border-radius:99px;overflow:hidden;">
+        <div id="countdown-bar" style="height:100%;background:#059669;width:100%;"></div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button type="button" class="btn-submit" style="padding:11px 14px;font-size:13px;flex:1;" onclick="confirmDetectedSubmit()">
+        ✓ Catat Kehadiran Sekarang
+      </button>
+      <button type="button" class="btn-cam-action" style="padding:11px 14px;font-size:13px;" onclick="cancelAutoSubmit()">
+        ✕ Bukan Saya
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== FORM CARD (PILIHAN MANUAL & STAF BARU) ===== -->
   <div class="card" id="form-card">
     <div class="card-title">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
       </svg>
-      Identifikasi Staf
+      Pilih Staf Manual (Opsional)
     </div>
-    <div class="card-desc">Pilih nama Anda dari daftar staf aktif untuk mencatat kehadiran hari ini.</div>
+    <div class="card-desc">Gunakan ini jika Anda belum memiliki foto di memori atau wajah tidak dikenali otomatis.</div>
 
     <div class="form-group" style="margin-bottom:8px;">
       <label>Pilih Nama Staf</label>
@@ -821,13 +1001,13 @@
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
       </svg>
-      Status Kehadiran
+      Status Kehadiran Manual
     </div>
-    <div class="card-desc">Pilih satu status yang sesuai dengan kondisi kehadiran Anda hari ini.</div>
+    <div class="card-desc">Pilih status kehadiran jika Anda tidak ingin menggunakan status otomatis shift.</div>
 
     <div class="status-grid">
 
-      <button class="status-btn" data-s="Hadir" onclick="selectStatus(this)">
+      <button class="status-btn active" data-s="Hadir" onclick="selectStatus(this)">
         <div class="s-check">
           <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
@@ -887,53 +1067,6 @@
         <span class="s-label">Alpha</span>
       </button>
 
-    </div>
-  </div>
-
-  <!-- ===== FOTO WAJAH CARD ===== -->
-  <div class="card" id="camera-card">
-    <div class="card-title">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
-      </svg>
-      Face Memory Scanner & Jadwal Otomatis
-    </div>
-    <div class="card-desc">Sistem memori wajah akan mencocokkan wajah Anda secara otomatis dan menghitung jadwal kerja real-time.</div>
-
-    <div class="camera-container">
-      <div id="cam-placeholder" class="camera-placeholder">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
-        </svg>
-        <span style="font-size:12px;color:#94a3b8">Kamera belum aktif</span>
-      </div>
-      <video id="camera-video" playsinline autoplay muted style="display:none;"></video>
-      <img id="photo-preview" alt="Foto Wajah">
-      <div id="camera-overlay" class="camera-overlay-frame" style="display:none;"></div>
-    </div>
-
-    <!-- Hidden canvas for capturing frame -->
-    <canvas id="photo-canvas" style="display:none;"></canvas>
-
-    <div class="cam-btn-group">
-      <button type="button" class="btn-cam-action" id="btn-start-cam" onclick="startCamera()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
-        </svg>
-        Buka Kamera
-      </button>
-      <button type="button" class="btn-cam-action" id="btn-snap-cam" onclick="takeSnapshot()" style="display:none;background:var(--primary);color:#fff;border-color:var(--primary);">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
-        </svg>
-        Jepret Foto
-      </button>
-      <button type="button" class="btn-cam-action" id="btn-retake-cam" onclick="retakePhoto()" style="display:none;">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3"/>
-        </svg>
-        Foto Ulang
-      </button>
     </div>
   </div>
 
@@ -1088,6 +1221,311 @@ let mediaStream = null;
 let currentAbsenMode = 'masuk';
 let DB = loadDB();
 
+/* ============================================================
+   AI FACE RECOGNITION & BIOMETRIC MATCHING ENGINE
+============================================================ */
+let _staffFaceDescriptors = []; // cached { staf, fp }
+let _autoScanInterval = null;
+let _isAutoScanActive = true;
+let _autoSubmitTimer = null;
+let _detectedStaf = null;
+
+function computeFaceFingerprint(sourceCanvasOrImg) {
+  try {
+    const c = document.createElement('canvas');
+    const size = 32;
+    c.width = size;
+    c.height = size;
+    const ctx = c.getContext('2d');
+
+    const sw = sourceCanvasOrImg.videoWidth || sourceCanvasOrImg.naturalWidth || sourceCanvasOrImg.width;
+    const sh = sourceCanvasOrImg.videoHeight || sourceCanvasOrImg.naturalHeight || sourceCanvasOrImg.height;
+    if (!sw || !sh) return null;
+
+    // Center 75% crop of face area
+    const minDim = Math.min(sw, sh);
+    const sx = (sw - minDim) / 2 + (minDim * 0.12);
+    const sy = (sh - minDim) / 2 + (minDim * 0.12);
+    const sSize = minDim * 0.76;
+
+    ctx.drawImage(sourceCanvasOrImg, sx, sy, sSize, sSize, 0, 0, size, size);
+    const imgData = ctx.getImageData(0, 0, size, size);
+    const data = imgData.data;
+
+    const total = size * size;
+    const vec = new Float32Array(total);
+    let sum = 0;
+    let totalR = 0, totalG = 0, totalB = 0;
+
+    for (let i = 0, j = 0; i < data.length; i += 4, j++) {
+      const lum = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
+      vec[j] = lum;
+      sum += lum;
+      totalR += data[i];
+      totalG += data[i+1];
+      totalB += data[i+2];
+    }
+
+    const mean = sum / total;
+    let normSq = 0;
+    for (let j = 0; j < total; j++) {
+      vec[j] -= mean;
+      normSq += vec[j] * vec[j];
+    }
+    const norm = Math.sqrt(normSq) || 1;
+    for (let j = 0; j < total; j++) {
+      vec[j] /= norm;
+    }
+
+    return {
+      vec: vec,
+      r: totalR / total,
+      g: totalG / total,
+      b: totalB / total
+    };
+  } catch(e) {
+    return null;
+  }
+}
+
+function compareFaceFingerprints(fp1, fp2) {
+  if (!fp1 || !fp2) return 0;
+  let dot = 0;
+  for (let i = 0; i < fp1.vec.length; i++) {
+    dot += fp1.vec[i] * fp2.vec[i];
+  }
+  const dr = Math.abs(fp1.r - fp2.r) / 255;
+  const dg = Math.abs(fp1.g - fp2.g) / 255;
+  const db = Math.abs(fp1.b - fp2.b) / 255;
+  const colorDiff = (dr + dg + db) / 3;
+
+  const simNorm = (dot + 1) / 2;
+  const finalScore = (simNorm * 0.8) + ((1 - colorDiff) * 0.2);
+  return Math.min(99, Math.round(finalScore * 100));
+}
+
+function loadStaffFaceDescriptors() {
+  _staffFaceDescriptors = [];
+  const withPhoto = DB.staf.filter(s => s.status === 'Aktif' && s.fotoMaster);
+  withPhoto.forEach(s => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function() {
+      const fp = computeFaceFingerprint(img);
+      if (fp) {
+        _staffFaceDescriptors.push({ staf: s, fp: fp });
+      }
+    };
+    img.src = s.fotoMaster;
+  });
+}
+
+function toggleAutoScan(enabled) {
+  _isAutoScanActive = enabled;
+  const slider = document.getElementById('autoscan-slider');
+  if (slider) slider.style.background = enabled ? '#059669' : '#94a3b8';
+  if (enabled) {
+    if (mediaStream) startAutoScanLoop();
+    showToast('Auto-Scan Wajah Diaktifkan ⚡');
+  } else {
+    stopAutoScanLoop();
+    showToast('Auto-Scan Dinonaktifkan (Manual)');
+  }
+}
+
+function startAutoScanLoop() {
+  stopAutoScanLoop();
+  if (!_isAutoScanActive) return;
+  _autoScanInterval = setInterval(() => {
+    scanLiveCameraFrame();
+  }, 750);
+}
+
+function stopAutoScanLoop() {
+  if (_autoScanInterval) {
+    clearInterval(_autoScanInterval);
+    _autoScanInterval = null;
+  }
+}
+
+function triggerManualScan() {
+  if (!mediaStream) {
+    startCamera();
+    return;
+  }
+  scanLiveCameraFrame(true);
+}
+
+function scanLiveCameraFrame(isManual = false) {
+  if (!mediaStream) return;
+  const video = document.getElementById('camera-video');
+  if (!video || !video.videoWidth || !video.videoHeight) return;
+
+  const liveFp = computeFaceFingerprint(video);
+  const pillText = document.getElementById('scanner-status-text');
+  const pillDot = document.getElementById('scanner-dot');
+  const oval = document.getElementById('face-target');
+  const camBox = document.getElementById('camera-box');
+
+  if (!_staffFaceDescriptors.length) {
+    if (pillText) pillText.textContent = 'Belum ada memori wajah terdaftar';
+    return;
+  }
+
+  let bestMatch = null;
+  let highestScore = 0;
+
+  for (const item of _staffFaceDescriptors) {
+    const score = compareFaceFingerprints(liveFp, item.fp);
+    if (score > highestScore) {
+      highestScore = score;
+      bestMatch = item.staf;
+    }
+  }
+
+  // Threshold kemiripan untuk mengunci target
+  if (bestMatch && highestScore >= 66) {
+    stopAutoScanLoop();
+    playTargetLockedSound();
+
+    if (oval) oval.classList.add('locked');
+    if (camBox) camBox.classList.add('detected');
+    if (pillDot) pillDot.style.background = '#10b981';
+    if (pillText) pillText.textContent = `🎯 Wajah Cocok: ${bestMatch.nama} (${highestScore}%)`;
+
+    takeSnapshotSilent();
+    handleFaceDetected(bestMatch, highestScore);
+  } else {
+    if (isManual) {
+      showToast('Wajah tidak cocok dengan memori. Silakan pilih nama manual di bawah.');
+    } else if (pillText) {
+      pillText.textContent = '⚡ Memindai Wajah...';
+    }
+  }
+}
+
+function handleFaceDetected(staf, score) {
+  _detectedStaf = staf;
+  selectedStafId = staf.id;
+
+  const sel = document.getElementById('staf-select');
+  if (sel) sel.value = staf.id;
+  onStafChange(true); // pass true agar tidak re-trigger kamera
+
+  const matchCard = document.getElementById('match-card');
+  const mFoto = document.getElementById('m-foto');
+  const mNama = document.getElementById('m-nama');
+  const mSub = document.getElementById('m-sub');
+  const mScore = document.getElementById('m-score');
+  const mShift = document.getElementById('m-shift-status');
+  const mBadge = document.getElementById('m-badge');
+
+  if (mFoto) mFoto.src = currentPhotoBase64 || staf.fotoMaster;
+  if (mNama) mNama.textContent = staf.nama;
+  if (mSub) mSub.textContent = `${staf.jabatan || 'Staf'} · ${staf.id}`;
+  if (mScore) mScore.textContent = `${score}%`;
+
+  const now = nowTimeStr();
+  const shift = staf.jadwalShift || 'Reguler (07:30 - 16:00)';
+  const calc = calculateShiftStatus(shift, now);
+  const modeText = currentAbsenMode === 'pulang' ? '🌇 Absen Pulang (Jam Keluar)' : '🌅 Absen Masuk';
+
+  if (mShift) mShift.textContent = `${modeText} · ${shift}`;
+  if (mBadge) {
+    mBadge.className = `badge-status badge-${calc.status}`;
+    mBadge.textContent = calc.status;
+  }
+
+  if (matchCard) matchCard.style.display = 'block';
+  startAutoSubmitCountdown();
+}
+
+let _countdownSec = 2;
+function startAutoSubmitCountdown() {
+  clearTimeout(_autoSubmitTimer);
+  _countdownSec = 2;
+  const secEl = document.getElementById('countdown-sec');
+  const barEl = document.getElementById('countdown-bar');
+  if (secEl) secEl.textContent = '2';
+  if (barEl) {
+    barEl.style.transition = 'width 2s linear';
+    barEl.style.width = '0%';
+  }
+
+  const interval = setInterval(() => {
+    _countdownSec--;
+    if (secEl) secEl.textContent = String(Math.max(0, _countdownSec));
+    if (_countdownSec <= 0) {
+      clearInterval(interval);
+    }
+  }, 1000);
+
+  _autoSubmitTimer = setTimeout(() => {
+    clearInterval(interval);
+    confirmDetectedSubmit();
+  }, 2000);
+}
+
+function cancelAutoSubmit() {
+  clearTimeout(_autoSubmitTimer);
+  const matchCard = document.getElementById('match-card');
+  if (matchCard) matchCard.style.display = 'none';
+  const oval = document.getElementById('face-target');
+  if (oval) oval.classList.remove('locked');
+  const camBox = document.getElementById('camera-box');
+  if (camBox) camBox.classList.remove('detected');
+
+  const pillText = document.getElementById('scanner-status-text');
+  if (pillText) pillText.textContent = 'Deteksi Dibatalkan. Pilih manual';
+
+  showToast('Deteksi otomatis dibatalkan.');
+  setTimeout(() => {
+    if (_isAutoScanActive && mediaStream) startAutoScanLoop();
+  }, 4000);
+}
+
+function confirmDetectedSubmit() {
+  clearTimeout(_autoSubmitTimer);
+  const matchCard = document.getElementById('match-card');
+  if (matchCard) matchCard.style.display = 'none';
+  submitAbsensi();
+}
+
+function takeSnapshotSilent() {
+  const video = document.getElementById('camera-video');
+  const canvas = document.getElementById('photo-canvas');
+  if (!video || !video.videoWidth) return;
+  const size = 320;
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  ctx.translate(size, 0);
+  ctx.scale(-1, 1);
+  const minDim = Math.min(video.videoWidth, video.videoHeight);
+  const sx = (video.videoWidth - minDim) / 2;
+  const sy = (video.videoHeight - minDim) / 2;
+  ctx.drawImage(video, sx, sy, minDim, minDim, 0, 0, size, size);
+  currentPhotoBase64 = canvas.toDataURL('image/jpeg', 0.72);
+}
+
+function playTargetLockedSound() {
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime); // E5
+    osc.frequency.setValueAtTime(880.00, audioCtx.currentTime + 0.08); // A5
+    gain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.18, audioCtx.currentTime + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.38);
+  } catch(e) {}
+}
+
 function nowTimeStr() {
   const d = new Date();
   const hh = String(d.getHours()).padStart(2, '0');
@@ -1178,7 +1616,10 @@ async function startCamera() {
   const placeholder = document.getElementById('cam-placeholder');
   const overlay = document.getElementById('camera-overlay');
   const btnStart = document.getElementById('btn-start-cam');
+  const btnScanNow = document.getElementById('btn-scan-now');
   const btnSnap = document.getElementById('btn-snap-cam');
+  const camBox = document.getElementById('camera-box');
+  const pillText = document.getElementById('scanner-status-text');
 
   try {
     if (mediaStream) {
@@ -1200,9 +1641,15 @@ async function startCamera() {
     overlay.style.display = 'flex';
     document.getElementById('photo-preview').style.display = 'none';
 
+    if (camBox) camBox.classList.add('scanning');
+    if (pillText) pillText.textContent = '🟢 Auto-Scan Aktif: Arahkan Wajah';
+
     btnStart.style.display = 'none';
-    btnSnap.style.display = 'inline-flex';
-    showToast('Kamera aktif! Arahkan wajah ke layar.');
+    if (btnScanNow) btnScanNow.style.display = 'inline-flex';
+    if (btnSnap) btnSnap.style.display = 'inline-flex';
+
+    showToast('Kamera aktif! Memindai wajah secara otomatis ⚡');
+    startAutoScanLoop();
   } catch(err) {
     console.error('Camera error:', err);
     showToast('Tidak dapat mengakses kamera: ' + (err.message || 'Izin ditolak'));
@@ -1210,14 +1657,36 @@ async function startCamera() {
 }
 
 function stopCamera() {
+  stopAutoScanLoop();
   if (mediaStream) {
     mediaStream.getTracks().forEach(track => track.stop());
     mediaStream = null;
   }
   const video = document.getElementById('camera-video');
-  video.srcObject = null;
-  video.style.display = 'none';
-  document.getElementById('camera-overlay').style.display = 'none';
+  if (video) {
+    video.srcObject = null;
+    video.style.display = 'none';
+  }
+  const overlay = document.getElementById('camera-overlay');
+  if (overlay) overlay.style.display = 'none';
+
+  const camBox = document.getElementById('camera-box');
+  if (camBox) {
+    camBox.classList.remove('scanning');
+    camBox.classList.remove('detected');
+  }
+  const oval = document.getElementById('face-target');
+  if (oval) oval.classList.remove('locked');
+
+  const pillText = document.getElementById('scanner-status-text');
+  if (pillText) pillText.textContent = 'Kamera Siaga';
+
+  const btnStart = document.getElementById('btn-start-cam');
+  const btnScanNow = document.getElementById('btn-scan-now');
+  const btnSnap = document.getElementById('btn-snap-cam');
+  if (btnStart) btnStart.style.display = 'inline-flex';
+  if (btnScanNow) btnScanNow.style.display = 'none';
+  if (btnSnap) btnSnap.style.display = 'none';
 }
 
 function takeSnapshot() {
@@ -1343,7 +1812,7 @@ function setAbsenMode(mode) {
 /* ============================================================
    ON STAF CHANGE
 ============================================================ */
-function onStafChange() {
+function onStafChange(skipCameraStart = false) {
   const sel = document.getElementById('staf-select');
   const id  = sel.value;
   selectedStafId = id || null;
@@ -1430,7 +1899,7 @@ function onStafChange() {
   }
 
   // Otomatis buka kamera jika belum aktif untuk kenyamanan staf
-  if (!mediaStream && !currentPhotoBase64) {
+  if (!skipCameraStart && !mediaStream && !currentPhotoBase64) {
     startCamera();
   }
 
@@ -1605,11 +2074,16 @@ function submitAbsensi() {
 ============================================================ */
 function resetForm() {
   stopCamera();
+  clearTimeout(_autoSubmitTimer);
   DB = loadDB();
   selectedStafId = null;
   selectedStatus = null;
   currentPhotoBase64 = null;
   currentAbsenMode = 'masuk';
+  _detectedStaf = null;
+
+  const matchCard = document.getElementById('match-card');
+  if (matchCard) matchCard.style.display = 'none';
 
   document.getElementById('staf-select').value = '';
   document.getElementById('keterangan').value  = '';
@@ -1643,11 +2117,14 @@ function resetForm() {
   document.getElementById('duplicate-warn').style.display = 'none';
   document.getElementById('submit-alert').style.display   = 'none';
   document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
+  const hadirBtn = document.querySelector('.status-btn[data-s="Hadir"]');
+  if (hadirBtn) hadirBtn.classList.add('active');
 
   // Reset camera UI
   document.getElementById('photo-preview').style.display = 'none';
   document.getElementById('cam-placeholder').style.display = 'flex';
   document.getElementById('btn-start-cam').style.display = 'inline-flex';
+  document.getElementById('btn-scan-now').style.display = 'none';
   document.getElementById('btn-snap-cam').style.display = 'none';
   document.getElementById('btn-retake-cam').style.display = 'none';
 
@@ -1655,19 +2132,26 @@ function resetForm() {
   showFormCards();
   checkSubmitReady();
   window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // Re-start scanner for next staff automatically
+  setTimeout(() => {
+    startCamera();
+  }, 300);
 }
 
 /* ============================================================
    HELPER — show / hide cards
 ============================================================ */
 function hideFormCards() {
-  ['form-card','status-card','camera-card','ket-card','submit-card'].forEach(id => {
-    document.getElementById(id).style.display = 'none';
+  ['form-card','status-card','camera-card','ket-card','submit-card','match-card'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
   });
 }
 function showFormCards() {
   ['form-card','status-card','camera-card','ket-card','submit-card'].forEach(id => {
-    document.getElementById(id).style.display = '';
+    const el = document.getElementById(id);
+    if (el) el.style.display = '';
   });
 }
 
@@ -1694,13 +2178,22 @@ function showToast(msg) {
    INIT
 ============================================================ */
 populateStaf();
+loadStaffFaceDescriptors();
 checkSubmitReady();
+
+/* Automatically activate camera on load */
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    startCamera();
+  }, 450);
+});
 
 /* Re-sync DB on tab focus */
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
     DB = loadDB();
     populateStaf();
+    loadStaffFaceDescriptors();
   }
 });
 </script>
