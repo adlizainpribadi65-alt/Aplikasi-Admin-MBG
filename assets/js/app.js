@@ -618,6 +618,7 @@ function viewStaf(id) {
       <div class="tab active" onclick="switchDetailTab('info')">📋 Info</div>
       <div class="tab" onclick="switchDetailTab('kontrak')">📄 Kontrak</div>
       <div class="tab" onclick="switchDetailTab('absensi')">📊 Absensi Bulan Ini</div>
+      <div class="tab" onclick="switchDetailTab('memori')">📷 Memori Wajah</div>
     </div>
     <div id="dt-info" class="tab-panel active">
       <div class="form-grid">
@@ -658,19 +659,91 @@ function viewStaf(id) {
         <div class="stat" style="padding:10px"><div class="stat-ic si-red" style="width:34px;height:34px;font-size:.9rem">🤒</div><div class="stat-info"><div class="stat-val" style="font-size:1.2rem">${sakit}</div><div class="stat-lbl">Sakit</div></div></div>
       </div>
     </div>
+    <div id="dt-memori" class="tab-panel">
+      <div style="text-align:center;padding:14px 10px;">
+        ${s.fotoMaster ? `
+          <div style="position:relative;display:inline-block;margin-bottom:12px;">
+            <img src="${s.fotoMaster}" alt="Foto Memori ${esc(s.nama)}" style="width:120px;height:120px;border-radius:18px;object-fit:cover;border:3px solid #059669;box-shadow:0 8px 24px rgba(5,150,105,0.2);">
+            <div style="position:absolute;bottom:-4px;right:-4px;background:#059669;color:#fff;border-radius:99px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:2px solid #fff;">✓</div>
+          </div>
+          <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:3px;">Wajah Terdaftar di Memori</div>
+          <div class="text-xs text-muted" style="max-width:320px;margin:0 auto 16px;">Tersimpan otomatis dari Terminal Absensi Wajah. Digunakan saat verifikasi kehadiran staf.</div>
+          <div class="flex gap-2 justify-center">
+            <label class="btn btn-outline btn-sm" style="cursor:pointer;">
+              📷 Ganti Foto
+              <input type="file" accept="image/*" style="display:none;" onchange="uploadFaceMemory('${s.id}', this)">
+            </label>
+            <button class="btn btn-sm" style="background:var(--red-light);color:var(--red);" onclick="resetFaceMemory('${s.id}')">🗑️ Reset Memori</button>
+          </div>
+        ` : `
+          <div style="width:110px;height:110px;border-radius:18px;background:var(--gray-100);display:flex;align-items:center;justify-content:center;font-size:2.4rem;color:var(--text-subtle);margin:0 auto 12px;border:2px dashed var(--gray-300);">👤</div>
+          <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:3px;">Belum Ada Memori Wajah</div>
+          <div class="text-xs text-muted" style="max-width:320px;margin:0 auto 16px;">Staf ini belum memiliki foto di memori. Foto akan otomatis tersimpan saat staf melakukan selfie absensi di terminal, atau daftarkan sekarang.</div>
+          <label class="btn btn-primary btn-sm" style="cursor:pointer;">
+            📷 Daftarkan Foto Wajah Sekarang
+            <input type="file" accept="image/*" style="display:none;" onchange="uploadFaceMemory('${s.id}', this)">
+          </label>
+        `}
+      </div>
+    </div>
   `;
   openModal('modal-detail');
 }
 
 function switchDetailTab(tab) {
   document.querySelectorAll('#detail-tabs .tab').forEach((el, i) => {
-    const tabs = ['info', 'kontrak', 'absensi'];
+    const tabs = ['info', 'kontrak', 'absensi', 'memori'];
     el.classList.toggle('active', tabs[i] === tab);
   });
   document.querySelectorAll('#staf-detail-body .tab-panel').forEach(p => {
     p.classList.toggle('active', p.id === 'dt-' + tab);
   });
 }
+
+function uploadFaceMemory(stafId, input) {
+  const file = input.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      const size = 320;
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const minDim = Math.min(img.width, img.height);
+      const sx = (img.width - minDim) / 2;
+      const sy = (img.height - minDim) / 2;
+      ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
+      const b64 = canvas.toDataURL('image/jpeg', 0.72);
+      
+      const s = DB.staf.find(x => x.id === stafId);
+      if (s) {
+        s.fotoMaster = b64;
+        saveDB();
+        toast('Foto memori wajah berhasil didaftarkan! ✅');
+        viewStaf(stafId);
+        switchDetailTab('memori');
+      }
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+window.uploadFaceMemory = uploadFaceMemory;
+
+function resetFaceMemory(stafId) {
+  const s = DB.staf.find(x => x.id === stafId);
+  if (!s) return;
+  if (!confirm(`Hapus foto memori wajah staf "${s.nama}"? Staf akan dapat mengambil foto baru di terminal absensi.`)) return;
+  delete s.fotoMaster;
+  saveDB();
+  toast('Memori foto wajah telah direset 🗑️', 'warn');
+  viewStaf(stafId);
+  switchDetailTab('memori');
+}
+window.resetFaceMemory = resetFaceMemory;
 
 function infoRow(label, value) {
   return `<div style="background:var(--gray-50);padding:9px 11px;border-radius:8px">
@@ -681,16 +754,16 @@ function infoRow(label, value) {
 
 function exportStafCSV() {
   if (!DB.staf.length) { toast('Tidak ada data untuk diekspor', 'warn'); return; }
-  const h = ['ID', 'Nama', 'NIK', 'Jabatan', 'Jenis Kelamin', 'Pendidikan', 'Tgl Masuk', 'Kontrak Berakhir', 'Status', 'Gaji', 'Telepon', 'Alamat'];
-  const rows = DB.staf.map(s => [s.id, s.nama, s.nik, s.jabatan, s.jenisKelamin, s.pendidikan, s.tglMasuk, s.tglKontrakBerakhir, s.status, s.gaji, s.telp, s.alamat]);
+  const h = ['ID', 'Nama', 'NIK', 'Jabatan', 'Tipe Kepegawaian', 'Jadwal Shift', 'Jenis Kelamin', 'Pendidikan', 'Tgl Masuk', 'Kontrak Berakhir', 'Status', 'Gaji', 'Telepon', 'Alamat'];
+  const rows = DB.staf.map(s => [s.id, s.nama, s.nik, s.jabatan, s.tipePegawai || 'Kontrak', s.jadwalShift || 'Reguler (07:30 - 16:00)', s.jenisKelamin, s.pendidikan, s.tglMasuk, s.tglKontrakBerakhir, s.status, s.gaji, s.telp, s.alamat]);
   csvDownload([h, ...rows], `data_staf_mbg_${todayStr()}.csv`);
   toast('Data staf diekspor ke CSV (Format Kolom Excel Rapi) ✅');
 }
 
 function exportStafExcel() {
   if (!DB.staf.length) { toast('Tidak ada data untuk diekspor', 'warn'); return; }
-  const h = ['No', 'ID Staf', 'Nama Lengkap', 'NIK (KTP)', 'Jabatan', 'Pendidikan', 'Tgl Masuk', 'Kontrak Berakhir', 'Status', 'Gaji Pokok', 'No. Telepon', 'Alamat'];
-  const rows = DB.staf.map((s, idx) => [idx + 1, s.id, s.nama, s.nik, s.jabatan, s.pendidikan, s.tglMasuk, s.tglKontrakBerakhir, s.status, s.gaji, s.telp, s.alamat]);
+  const h = ['No', 'ID Staf', 'Nama Lengkap', 'NIK (KTP)', 'Jabatan', 'Tipe Kepegawaian', 'Jadwal Shift', 'Pendidikan', 'Tgl Masuk', 'Kontrak Berakhir', 'Status', 'Gaji Pokok', 'No. Telepon', 'Alamat'];
+  const rows = DB.staf.map((s, idx) => [idx + 1, s.id, s.nama, s.nik, s.jabatan, s.tipePegawai || 'Kontrak', s.jadwalShift || 'Reguler (07:30 - 16:00)', s.pendidikan, s.tglMasuk, s.tglKontrakBerakhir, s.status, s.gaji, s.telp, s.alamat]);
   exportToExcelTable('DATABASE SELURUH STAF MBG', h, rows, `Database_Staf_MBG_${todayStr()}.xls`);
   toast('Data staf berhasil diekspor ke Excel (.xls) 📗');
 }
@@ -735,7 +808,10 @@ function renderAbsensiTable() {
           <span class="td-name">${esc(s.nama)}</span>
         </div>
       </td>
-      <td class="text-sm text-muted">${esc(s.jabatan)}</td>
+      <td>
+        <div class="text-sm font-semi">${esc(s.jabatan)}</div>
+        <div class="text-xs text-muted" style="margin-top:2px;">⏰ ${esc(s.jadwalShift || 'Reguler')}</div>
+      </td>
       <td>
         <select class="fselect" style="font-size:.78rem;padding:4px 8px" onchange="setAbs('${s.id}','status',this.value)">
           <option value="" ${!st ? 'selected' : ''}>— Belum —</option>
@@ -802,8 +878,8 @@ function exportAbsensiCSV() {
   if (!aktif.length) { toast('Tidak ada staf aktif', 'warn'); return; }
   const ex = {};
   DB.absensi.filter(a => a.tanggal === _absDate).forEach(a => { ex[a.stafId] = a; });
-  const h = ['ID', 'Nama', 'Jabatan', 'Status', 'Jam Masuk', 'Jam Keluar', 'Keterangan'];
-  const rows = aktif.map(s => { const r = ex[s.id] || {}; return [s.id, s.nama, s.jabatan, r.status || 'Belum', r.jamMasuk || '', r.jamKeluar || '', r.keterangan || '']; });
+  const h = ['ID', 'Nama', 'Jabatan', 'Jadwal Shift', 'Status', 'Jam Masuk', 'Jam Keluar', 'Keterangan'];
+  const rows = aktif.map(s => { const r = ex[s.id] || {}; return [s.id, s.nama, s.jabatan, s.jadwalShift || 'Reguler (07:30 - 16:00)', r.status || 'Belum', r.jamMasuk || '', r.jamKeluar || '', r.keterangan || '']; });
   csvDownload([h, ...rows], `absensi_${_absDate}.csv`);
   toast('Absensi diekspor ke CSV (Format Kolom Rapi) ✅');
 }
@@ -813,8 +889,8 @@ function exportAbsensiExcel() {
   if (!aktif.length) { toast('Tidak ada staf aktif', 'warn'); return; }
   const ex = {};
   DB.absensi.filter(a => a.tanggal === _absDate).forEach(a => { ex[a.stafId] = a; });
-  const h = ['No', 'ID Staf', 'Nama Staf', 'Jabatan', 'Status Kehadiran', 'Jam Masuk', 'Jam Keluar', 'Keterangan Presensi'];
-  const rows = aktif.map((s, idx) => { const r = ex[s.id] || {}; return [idx + 1, s.id, s.nama, s.jabatan, r.status || 'Belum Diisi', r.jamMasuk || '-', r.jamKeluar || '-', r.keterangan || '-']; });
+  const h = ['No', 'ID Staf', 'Nama Staf', 'Jabatan', 'Jadwal Shift', 'Status Kehadiran', 'Jam Masuk', 'Jam Keluar', 'Keterangan Presensi'];
+  const rows = aktif.map((s, idx) => { const r = ex[s.id] || {}; return [idx + 1, s.id, s.nama, s.jabatan, s.jadwalShift || 'Reguler (07:30 - 16:00)', r.status || 'Belum Diisi', r.jamMasuk || '-', r.jamKeluar || '-', r.keterangan || '-']; });
   exportToExcelTable(`ABSENSI HARIAN MBG - TANGGAL ${fmt(_absDate).toUpperCase()}`, h, rows, `Absensi_MBG_${_absDate}.xls`);
   toast('Absensi harian diekspor ke Excel (.xls) 📗');
 }

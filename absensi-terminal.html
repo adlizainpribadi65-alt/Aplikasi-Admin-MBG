@@ -587,14 +587,21 @@
     }
     .staff-preview.show { display: flex; }
 
+    .staff-avatar-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+
     .staff-avatar {
-      width: 42px; height: 42px;
+      width: 44px; height: 44px;
       border-radius: 12px;
       display: flex; align-items: center; justify-content: center;
       font-size: 15px;
       font-weight: 700;
       color: #fff;
       flex-shrink: 0;
+      border: 2px solid #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
     .staff-info-name {
       font-size: 14px;
@@ -605,6 +612,58 @@
       font-size: 12px;
       color: var(--text-muted);
       margin-top: 2px;
+    }
+
+    .badge-memori-yes {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: #dcfce7;
+      color: #15803d;
+      margin-top: 4px;
+    }
+    .badge-memori-no {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: #e0f2fe;
+      color: #0369a1;
+      margin-top: 4px;
+    }
+
+    .btn-mode {
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1.5px solid var(--border-light);
+      background: #fff;
+      color: var(--text-muted);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.18s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-family: inherit;
+    }
+    .btn-mode:hover {
+      border-color: var(--border-focus);
+      color: var(--text-main);
+    }
+    .btn-mode.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      box-shadow: 0 2px 8px rgba(23,25,32,0.18);
     }
 
     /* ============================================================ */
@@ -718,22 +777,42 @@
     </div>
     <div class="card-desc">Pilih nama Anda dari daftar staf aktif untuk mencatat kehadiran hari ini.</div>
 
-    <div class="form-group">
+    <div class="form-group" style="margin-bottom:8px;">
       <label>Pilih Nama Staf</label>
       <select id="staf-select" onchange="onStafChange()">
         <option value="">— Pilih nama Anda —</option>
       </select>
       <div class="staff-preview" id="staff-preview">
-        <div class="staff-avatar" id="staff-avatar">?</div>
-        <div>
+        <div class="staff-avatar-wrap">
+          <div class="staff-avatar" id="staff-avatar">?</div>
+          <img id="staff-master-img" class="staff-avatar" style="display:none;object-fit:cover;" alt="Memori Wajah">
+        </div>
+        <div style="flex:1;min-width:0;">
           <div class="staff-info-name" id="staff-name-preview">—</div>
           <div class="staff-info-job" id="staff-job-preview">—</div>
+          <div id="staff-memory-badge"></div>
         </div>
       </div>
     </div>
 
+    <!-- Mode Absen: Masuk vs Pulang -->
+    <div id="mode-absen-box" style="display:none;margin-top:10px;padding:12px;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-size:12px;font-weight:700;color:var(--text-main);">Tipe Absensi</span>
+        <span id="mode-auto-badge" style="font-size:11px;color:var(--accent-blue);font-weight:600;background:rgba(2,132,199,0.1);padding:2px 8px;border-radius:99px;">Otomatis Sesuai Shift</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button type="button" class="btn-mode active" id="btn-mode-masuk" onclick="setAbsenMode('masuk')">
+          🌅 Absen Masuk
+        </button>
+        <button type="button" class="btn-mode" id="btn-mode-pulang" onclick="setAbsenMode('pulang')">
+          🌇 Absen Pulang
+        </button>
+      </div>
+    </div>
+
     <!-- Duplicate warning will appear here -->
-    <div id="duplicate-warn" style="margin-bottom:12px;display:none;"></div>
+    <div id="duplicate-warn" style="margin-top:10px;display:none;"></div>
   </div>
 
   <!-- ===== STATUS CARD ===== -->
@@ -906,6 +985,10 @@
         <span class="info-value" id="s-jabatan">—</span>
       </div>
       <div class="info-row">
+        <span class="info-label">Tipe Presensi</span>
+        <span class="info-value" id="s-mode" style="font-weight:700;">—</span>
+      </div>
+      <div class="info-row">
         <span class="info-label">Tanggal</span>
         <span class="info-value" id="s-tanggal">—</span>
       </div>
@@ -1002,6 +1085,7 @@ let selectedStafId = null;
 let selectedStatus = null;
 let currentPhotoBase64 = null;
 let mediaStream = null;
+let currentAbsenMode = 'masuk';
 let DB = loadDB();
 
 function nowTimeStr() {
@@ -1066,6 +1150,9 @@ function calculateShiftStatus(jadwalStr, currentTimeStr) {
     return { status: 'Terlambat', note: `Terlambat ${diff} menit (Jadwal: ${String(targetHour).padStart(2,'0')}:${String(targetMin).padStart(2,'0')})` };
   }
 }
+
+/* ============================================================
+   LIVE CLOCK
 ============================================================ */
 const DAYS_ID = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
@@ -1211,6 +1298,49 @@ function populateStaf() {
 }
 
 /* ============================================================
+   MODE ABSENSI (MASUK VS PULANG)
+============================================================ */
+function setAbsenMode(mode) {
+  currentAbsenMode = mode;
+  const btnMasuk = document.getElementById('btn-mode-masuk');
+  const btnPulang = document.getElementById('btn-mode-pulang');
+  const btnSubmit = document.getElementById('btn-submit');
+  const statusCard = document.getElementById('status-card');
+
+  if (btnMasuk) btnMasuk.classList.toggle('active', mode === 'masuk');
+  if (btnPulang) btnPulang.classList.toggle('active', mode === 'pulang');
+
+  if (mode === 'pulang') {
+    // Mode pulang: default Hadir selesai dinas
+    if (!selectedStatus) {
+      selectedStatus = 'Hadir';
+      const hadirBtn = document.querySelector('.status-btn[data-s="Hadir"]');
+      if (hadirBtn) hadirBtn.classList.add('active');
+    }
+    if (statusCard) statusCard.style.opacity = '0.7';
+    if (btnSubmit) {
+      btnSubmit.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 12 18 15 15"/>
+        </svg>
+        Catat Absen Pulang (Jam Keluar)
+      `;
+    }
+  } else {
+    if (statusCard) statusCard.style.opacity = '1';
+    if (btnSubmit) {
+      btnSubmit.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        Catat Kehadiran (Jam Masuk)
+      `;
+    }
+  }
+  checkSubmitReady();
+}
+
+/* ============================================================
    ON STAF CHANGE
 ============================================================ */
 function onStafChange() {
@@ -1220,10 +1350,12 @@ function onStafChange() {
 
   const preview = document.getElementById('staff-preview');
   const dupWarn = document.getElementById('duplicate-warn');
+  const modeBox = document.getElementById('mode-absen-box');
 
   if (!id) {
     preview.classList.remove('show');
     dupWarn.style.display = 'none';
+    if (modeBox) modeBox.style.display = 'none';
     checkSubmitReady();
     return;
   }
@@ -1231,32 +1363,73 @@ function onStafChange() {
   const staf = DB.staf.find(s => s.id === id);
   if (!staf) return;
 
-  /* Show avatar preview */
+  /* Show avatar preview & check Face Memory */
   const av = document.getElementById('staff-avatar');
-  av.style.background = avatarColor(staf.nama);
-  av.textContent = (staf.nama || '?').charAt(0).toUpperCase();
-  document.getElementById('staff-name-preview').textContent = staf.nama;
-  document.getElementById('staff-job-preview').textContent  = staf.jabatan || '—';
-  preview.classList.add('show');
+  const masterImg = document.getElementById('staff-master-img');
+  const memBadge = document.getElementById('staff-memory-badge');
 
-  /* Duplicate check */
+  if (staf.fotoMaster) {
+    av.style.display = 'none';
+    masterImg.src = staf.fotoMaster;
+    masterImg.style.display = 'block';
+    memBadge.innerHTML = `<span class="badge-memori-yes">🟢 Memori Wajah Terdaftar</span>`;
+  } else {
+    masterImg.style.display = 'none';
+    av.style.display = 'flex';
+    av.style.background = avatarColor(staf.nama);
+    av.textContent = (staf.nama || '?').charAt(0).toUpperCase();
+    memBadge.innerHTML = `<span class="badge-memori-no">🔵 Memori Baru (Auto-Simpan)</span>`;
+  }
+
+  document.getElementById('staff-name-preview').textContent = staf.nama;
+  const shiftText = staf.jadwalShift ? ` · ${staf.jadwalShift}` : '';
+  document.getElementById('staff-job-preview').textContent  = (staf.jabatan || '—') + shiftText;
+  preview.classList.add('show');
+  if (modeBox) modeBox.style.display = 'block';
+
+  /* Duplicate / Shift Check */
   const today = todayStr();
   const existing = DB.absensi.find(a => (a.stafId === id || a.id === `${id}|${today}`) && a.tanggal === today);
+
   if (existing) {
-    dupWarn.style.display = 'block';
-    const existingJam = existing.jam || existing.jamMasuk || '-';
-    dupWarn.innerHTML = `
-      <div class="alert alert-warn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-        </svg>
-        <div><b>${staf.nama}</b> sudah tercatat hadir hari ini dengan status <b>${existing.status || 'Tercatat'}</b> pada jam <b>${existingJam}</b>. Submisi baru akan memperbarui data hari ini.</div>
-      </div>`;
+    const existingJam = existing.jamMasuk || existing.jam || '-';
+    const existingKeluar = existing.jamKeluar || '';
+
+    if (!existingKeluar) {
+      // Sudah ada jam masuk hari ini -> Otomatis alihkan ke Absen Pulang
+      setAbsenMode('pulang');
+      dupWarn.style.display = 'block';
+      dupWarn.innerHTML = `
+        <div class="alert alert-warn" style="margin-top:10px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <div>
+            <b>${staf.nama}</b> telah absen masuk pada <b>${existingJam}</b> (${existing.status}).
+            <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px;">Sistem otomatis mengarahkan ke <b>Absen Pulang (Jam Keluar)</b>.</div>
+          </div>
+        </div>`;
+    } else {
+      // Sudah lengkap masuk dan pulang
+      setAbsenMode('masuk');
+      dupWarn.style.display = 'block';
+      dupWarn.innerHTML = `
+        <div class="alert alert-warn" style="margin-top:10px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          </svg>
+          <div>
+            <b>${staf.nama}</b> sudah lengkap: Masuk (${existingJam}) & Pulang (${existingKeluar}).
+            Submisi ulang akan memperbarui data kehadiran hari ini.
+          </div>
+        </div>`;
+    }
   } else {
+    setAbsenMode('masuk');
     dupWarn.style.display = 'none';
   }
 
-  // Otomatis buka kamera jika belum aktif untuk memudahkan staf
+  // Otomatis buka kamera jika belum aktif untuk kenyamanan staf
   if (!mediaStream && !currentPhotoBase64) {
     startCamera();
   }
@@ -1279,14 +1452,19 @@ function selectStatus(btn) {
 ============================================================ */
 function checkSubmitReady() {
   const btn = document.getElementById('btn-submit');
-  btn.disabled = !(selectedStafId && selectedStatus);
+  if (currentAbsenMode === 'pulang') {
+    btn.disabled = !selectedStafId;
+  } else {
+    btn.disabled = !(selectedStafId && selectedStatus);
+  }
 }
 
 /* ============================================================
    SUBMIT ABSENSI
 ============================================================ */
 function submitAbsensi() {
-  if (!selectedStafId || !selectedStatus) return;
+  if (!selectedStafId) return;
+  if (currentAbsenMode === 'masuk' && !selectedStatus) return;
 
   DB = loadDB(); /* fresh read */
   const staf = DB.staf.find(s => s.id === selectedStafId);
@@ -1297,49 +1475,81 @@ function submitAbsensi() {
 
   const today  = todayStr();
   const now    = new Date();
-  const jamStr = nowTimeStr(); // format konsisten HH:mm agar cocok 100% dengan input time di dashboard
+  const jamStr = nowTimeStr(); // format konsisten HH:mm
   const keteranganVal = document.getElementById('keterangan').value.trim();
-
-  /* Remove old record if duplicate to stay sync with both ID schemes */
   const recId = `${staf.id}|${today}`;
-  DB.absensi = DB.absensi.filter(a => !( (a.stafId === selectedStafId || a.id === recId) && a.tanggal === today ));
-
-  // Smart schedule adjustment: Jika user memilih hadir tapi lewat jam shift, sesuaikan otomatis
-  let finalStatus = selectedStatus;
-  let finalKet = keteranganVal;
   const shift = staf.jadwalShift || 'Reguler (07:30 - 16:00)';
 
-  if (selectedStatus === 'Hadir' || selectedStatus === 'Terlambat') {
-    const calc = calculateShiftStatus(shift, jamStr);
-    finalStatus = calc.status;
-    if (!finalKet) finalKet = calc.note;
+  let existing = DB.absensi.find(a => (a.stafId === selectedStafId || a.id === recId) && a.tanggal === today);
+  let finalStatus = selectedStatus || 'Hadir';
+  let finalKet = keteranganVal;
+
+  if (currentAbsenMode === 'pulang') {
+    // Mode Pulang (Catat Jam Keluar)
+    if (existing) {
+      existing.jamKeluar = jamStr;
+      if (currentPhotoBase64) existing.fotoKeluar = currentPhotoBase64;
+      if (finalKet) {
+        existing.keterangan = existing.keterangan ? `${existing.keterangan} | Pulang: ${finalKet}` : `Pulang: ${finalKet}`;
+      }
+      finalStatus = existing.status || 'Hadir';
+      finalKet = existing.keterangan || `Pulang pada ${jamStr}`;
+    } else {
+      // Belum ada data masuk hari ini, buat record baru dengan jam pulang
+      const record = {
+        id:         recId,
+        stafId:     staf.id,
+        nama:       staf.nama,
+        jabatan:    staf.jabatan || '',
+        jadwalShift: shift,
+        tanggal:    today,
+        status:     'Hadir',
+        keterangan: finalKet ? `Langsung Pulang: ${finalKet}` : 'Absen Pulang',
+        jam:        jamStr,
+        jamMasuk:   '',
+        jamKeluar:  jamStr,
+        foto:       currentPhotoBase64 || (staf.fotoMaster || '')
+      };
+      DB.absensi.push(record);
+      finalStatus = 'Hadir';
+      if (!finalKet) finalKet = 'Absen Pulang';
+    }
+  } else {
+    // Mode Masuk (Catat Jam Masuk)
+    if (selectedStatus === 'Hadir' || selectedStatus === 'Terlambat') {
+      const calc = calculateShiftStatus(shift, jamStr);
+      finalStatus = calc.status;
+      if (!finalKet) finalKet = calc.note;
+    }
+
+    const prevKeluar = existing?.jamKeluar || '';
+    DB.absensi = DB.absensi.filter(a => !( (a.stafId === selectedStafId || a.id === recId) && a.tanggal === today ));
+
+    const record = {
+      id:         recId,
+      stafId:     staf.id,
+      nama:       staf.nama,
+      jabatan:    staf.jabatan || '',
+      jadwalShift: shift,
+      tanggal:    today,
+      status:     finalStatus,
+      keterangan: finalKet,
+      jam:        jamStr,
+      jamMasuk:   jamStr,
+      jamKeluar:  prevKeluar,
+      foto:       currentPhotoBase64 || (staf.fotoMaster || '')
+    };
+    DB.absensi.push(record);
   }
 
-  const record = {
-    id:         recId,
-    stafId:     staf.id,
-    nama:       staf.nama,
-    jabatan:    staf.jabatan || '',
-    jadwalShift: shift,
-    tanggal:    today,
-    status:     finalStatus,
-    keterangan: finalKet,
-    jam:        jamStr,
-    jamMasuk:   jamStr,
-    jamKeluar:  '',
-    foto:       currentPhotoBase64 || '' // simpan foto wajah staf
-  };
-
-  // Simpan foto ke memori staf jika staf belum memiliki foto master
+  // Simpan foto ke memori staf jika belum memiliki foto master
   if (currentPhotoBase64 && !staf.fotoMaster) {
     staf.fotoMaster = currentPhotoBase64;
     const stafIdx = DB.staf.findIndex(s => s.id === staf.id);
     if (stafIdx !== -1) DB.staf[stafIdx].fotoMaster = currentPhotoBase64;
   }
 
-  DB.absensi.push(record);
   saveDB(DB);
-
   stopCamera();
 
   /* ---- Show success screen ---- */
@@ -1354,6 +1564,10 @@ function submitAbsensi() {
     document.getElementById('success-photo-img').src = currentPhotoBase64;
     photoWrap.style.display = 'block';
     ring.style.display = 'none';
+  } else if (staf.fotoMaster) {
+    document.getElementById('success-photo-img').src = staf.fotoMaster;
+    photoWrap.style.display = 'block';
+    ring.style.display = 'none';
   } else {
     photoWrap.style.display = 'none';
     ring.style.display = 'flex';
@@ -1361,6 +1575,7 @@ function submitAbsensi() {
 
   document.getElementById('s-nama').textContent     = staf.nama;
   document.getElementById('s-jabatan').textContent  = staf.jabatan || '—';
+  document.getElementById('s-mode').textContent     = currentAbsenMode === 'pulang' ? '🌇 Absen Pulang (Jam Keluar)' : '🌅 Absen Masuk';
   document.getElementById('s-tanggal').textContent  =
     `${now.getDate()} ${MONTHS_ID[now.getMonth()]} ${now.getFullYear()}`;
   document.getElementById('s-jam').textContent      = jamStr;
@@ -1376,11 +1591,12 @@ function submitAbsensi() {
     ketRow.style.display = 'none';
   }
 
+  const modeText = currentAbsenMode === 'pulang' ? 'kepulangan' : 'kehadiran';
   document.getElementById('success-subtitle').textContent =
-    `Kehadiran ${staf.nama} telah berhasil diverifikasi pada ${jamStr}.`;
+    `Data ${modeText} ${staf.nama} telah berhasil diverifikasi pada ${jamStr}.`;
 
-  playSuccessChime(); // Bunyikan nada sukses & haptics pro
-  showToast('Absensi wajah berhasil dicatat!');
+  playSuccessChime(); // Bunyikan nada audio & getar haptic
+  showToast(currentAbsenMode === 'pulang' ? 'Absen pulang berhasil dicatat! 👋' : 'Absen wajah berhasil dicatat! ✓');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -1393,10 +1609,37 @@ function resetForm() {
   selectedStafId = null;
   selectedStatus = null;
   currentPhotoBase64 = null;
+  currentAbsenMode = 'masuk';
 
   document.getElementById('staf-select').value = '';
   document.getElementById('keterangan').value  = '';
   document.getElementById('staff-preview').classList.remove('show');
+  const modeBox = document.getElementById('mode-absen-box');
+  if (modeBox) modeBox.style.display = 'none';
+  const masterImg = document.getElementById('staff-master-img');
+  if (masterImg) masterImg.style.display = 'none';
+  const memBadge = document.getElementById('staff-memory-badge');
+  if (memBadge) memBadge.innerHTML = '';
+  const av = document.getElementById('staff-avatar');
+  if (av) { av.style.display = 'flex'; av.textContent = '?'; av.style.background = '#64748b'; }
+
+  const statusCard = document.getElementById('status-card');
+  if (statusCard) statusCard.style.opacity = '1';
+  const btnMasuk = document.getElementById('btn-mode-masuk');
+  const btnPulang = document.getElementById('btn-mode-pulang');
+  if (btnMasuk) btnMasuk.classList.add('active');
+  if (btnPulang) btnPulang.classList.remove('active');
+
+  const btnSubmit = document.getElementById('btn-submit');
+  if (btnSubmit) {
+    btnSubmit.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+      Catat Kehadiran (Jam Masuk)
+    `;
+  }
+
   document.getElementById('duplicate-warn').style.display = 'none';
   document.getElementById('submit-alert').style.display   = 'none';
   document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
