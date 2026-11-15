@@ -668,21 +668,31 @@ function viewStaf(id) {
           </div>
           <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:3px;">Wajah Terdaftar di Memori</div>
           <div class="text-xs text-muted" style="max-width:320px;margin:0 auto 16px;">Tersimpan otomatis dari Terminal Absensi Wajah. Digunakan saat verifikasi kehadiran staf.</div>
-          <div class="flex gap-2 justify-center">
+          <div class="flex gap-2 justify-center" style="flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm" onclick="openCameraFaceEnroll('${s.id}')">
+              📸 Buka Kamera Langsung
+            </button>
             <label class="btn btn-outline btn-sm" style="cursor:pointer;">
-              📷 Ganti Foto
+              📁 Cari di File
               <input type="file" accept="image/*" style="display:none;" onchange="uploadFaceMemory('${s.id}', this)">
             </label>
-            <button class="btn btn-sm" style="background:var(--red-light);color:var(--red);" onclick="resetFaceMemory('${s.id}')">🗑️ Reset Memori</button>
+            <button class="btn btn-sm" style="background:var(--red-light);color:var(--red);" onclick="resetFaceMemory('${s.id}')">
+              🗑️ Reset Memori
+            </button>
           </div>
         ` : `
           <div style="width:110px;height:110px;border-radius:18px;background:var(--gray-100);display:flex;align-items:center;justify-content:center;font-size:2.4rem;color:var(--text-subtle);margin:0 auto 12px;border:2px dashed var(--gray-300);">👤</div>
           <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:3px;">Belum Ada Memori Wajah</div>
-          <div class="text-xs text-muted" style="max-width:320px;margin:0 auto 16px;">Staf ini belum memiliki foto di memori. Foto akan otomatis tersimpan saat staf melakukan selfie absensi di terminal, atau daftarkan sekarang.</div>
-          <label class="btn btn-primary btn-sm" style="cursor:pointer;">
-            📷 Daftarkan Foto Wajah Sekarang
-            <input type="file" accept="image/*" style="display:none;" onchange="uploadFaceMemory('${s.id}', this)">
-          </label>
+          <div class="text-xs text-muted" style="max-width:320px;margin:0 auto 16px;">Staf ini belum memiliki foto di memori. Anda dapat langsung membuka kamera atau memilih foto dari file.</div>
+          <div class="flex gap-2 justify-center" style="flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm" onclick="openCameraFaceEnroll('${s.id}')">
+              📸 Buka Kamera Langsung
+            </button>
+            <label class="btn btn-outline btn-sm" style="cursor:pointer;">
+              📁 Cari di File
+              <input type="file" accept="image/*" style="display:none;" onchange="uploadFaceMemory('${s.id}', this)">
+            </label>
+          </div>
         `}
       </div>
     </div>
@@ -744,6 +754,92 @@ function resetFaceMemory(stafId) {
   switchDetailTab('memori');
 }
 window.resetFaceMemory = resetFaceMemory;
+
+/* ============================================================
+   CAMERA ENROLLMENT DIRECT FROM DASHBOARD
+============================================================ */
+let _cameraEnrollStream = null;
+let _cameraEnrollStafId = null;
+
+function openCameraFaceEnroll(stafId) {
+  _cameraEnrollStafId = stafId;
+  const s = DB.staf.find(x => x.id === stafId);
+  const titleEl = document.getElementById('cam-face-title');
+  if (titleEl && s) {
+    titleEl.textContent = `📸 Foto Wajah — ${s.nama}`;
+  }
+  openModal('modal-camera-face');
+  startCameraEnroll();
+}
+window.openCameraFaceEnroll = openCameraFaceEnroll;
+
+async function startCameraEnroll() {
+  const video = document.getElementById('cam-face-video');
+  try {
+    if (_cameraEnrollStream) stopCameraEnroll();
+    _cameraEnrollStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+      audio: false
+    });
+    if (video) {
+      video.srcObject = _cameraEnrollStream;
+      video.play();
+    }
+  } catch (err) {
+    console.error('Camera access error:', err);
+    alert('Tidak dapat mengakses kamera: ' + (err.message || 'Izin ditolak atau kamera tidak ditemukan'));
+    closeCameraFaceModal();
+  }
+}
+
+function stopCameraEnroll() {
+  if (_cameraEnrollStream) {
+    _cameraEnrollStream.getTracks().forEach(t => t.stop());
+    _cameraEnrollStream = null;
+  }
+  const video = document.getElementById('cam-face-video');
+  if (video) video.srcObject = null;
+}
+
+function closeCameraFaceModal() {
+  stopCameraEnroll();
+  closeModal('modal-camera-face');
+}
+window.closeCameraFaceModal = closeCameraFaceModal;
+
+function snapAndSaveFace() {
+  const video = document.getElementById('cam-face-video');
+  const canvas = document.getElementById('cam-face-canvas');
+  if (!video || !video.videoWidth || !_cameraEnrollStafId) {
+    toast('Kamera belum siap, mohon tunggu sebentar...', 'err');
+    return;
+  }
+
+  const size = 320;
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  // Mirror & center square crop
+  ctx.translate(size, 0);
+  ctx.scale(-1, 1);
+  const minDim = Math.min(video.videoWidth, video.videoHeight);
+  const sx = (video.videoWidth - minDim) / 2;
+  const sy = (video.videoHeight - minDim) / 2;
+  ctx.drawImage(video, sx, sy, minDim, minDim, 0, 0, size, size);
+
+  const b64 = canvas.toDataURL('image/jpeg', 0.72);
+  const s = DB.staf.find(x => x.id === _cameraEnrollStafId);
+  if (s) {
+    s.fotoMaster = b64;
+    saveDB();
+    toast('Foto memori wajah berhasil disimpan langsung dari kamera! 📸✅');
+    closeCameraFaceModal();
+    viewStaf(_cameraEnrollStafId);
+    switchDetailTab('memori');
+  }
+}
+window.snapAndSaveFace = snapAndSaveFace;
 
 function infoRow(label, value) {
   return `<div style="background:var(--gray-50);padding:9px 11px;border-radius:8px">
